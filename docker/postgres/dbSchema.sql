@@ -1,4 +1,4 @@
-\connect "notebook";
+CREATE DATABASE "notebook";
 
 CREATE USER created_instances_user WITH PASSWORD '%pwUser1%';
 CREATE USER insert_user WITH PASSWORD '%pwUser2%';

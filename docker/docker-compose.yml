@@ -1,0 +1,45 @@
+version: "3.9"
+services:
+  nginx:
+    build: ./nginx
+    depends_on:
+      - landing-server
+    networks:
+      - devob-main
+      - devob-instances
+    ports:
+      - "80:80"
+
+  landing-server:
+    build: ./landing
+    depends_on:
+      - db
+      - redis
+    networks:
+      - devob-main
+  
+  db:
+    build: ./postgres
+    environment:
+      - POSTGRES_PASSWORD=asjdkjwe
+    networks:
+      - devob-main
+    volumes:
+      - "devob-data:/var/lib/postgresql/data"
+
+  redis:
+    build: ./redis
+    networks:
+      - devob-main
+    ports:
+      - "6379:6379"
+
+volumes:
+  devob-data:
+
+networks:
+  devob-main:
+    driver: bridge
+  devob-instances:
+    driver: bridge
+    internal: true
