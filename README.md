@@ -11,6 +11,7 @@ If you are interested in the backgrounds of this tool, you can read our paper "L
 ## Authors
 * **Christian Stransky**
 * **Lukas Löhle** - *Task Generator*
+* **Joe Lewis** - *2021 Docker rework*
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
