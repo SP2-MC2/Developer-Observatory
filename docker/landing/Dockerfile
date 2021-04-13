@@ -11,11 +11,13 @@ RUN chmod +x /usr/local/bin/install-php-extensions && sync && \
     install-php-extensions gd xdebug
 
 
-RUN install-php-extensions pgsql redis @composer zip
+RUN install-php-extensions pgsql pdo_pgsql redis @composer zip
 
 RUN composer require google/recaptcha "~1.1" &&\
     composer require aws/aws-sdk-php &&\
     composer install
 
-COPY app/ /var/www/devob/ 
-COPY webpageConf/ /var/www/
+
+COPY app/ /var/www/devob/
+RUN mkdir /var/www/webpageConf
+COPY webpageConf/ /var/www/webpageConf/

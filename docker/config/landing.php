@@ -30,10 +30,10 @@ $sshKeyName = '%sshKeyName%';
 // Password is being replaced automatically, skip
 $dbuser = 'created_instances_user';  
 $dbpass = '%pwUser1%';  
-$dbhost = 'localhost';  
+$dbhost = 'db';  
 $dbname = 'notebook';  
 
-$redisIp = '127.0.0.1';
+$redisIp = 'redis';
 $redisQueue = 'queuedInstances';
 $redisQueueBooting = 'queuedInstancesBooting';
 $waitTimeoutForInstance = 120;

@@ -1,5 +1,3 @@
-CREATE DATABASE "notebook";
-
 CREATE USER created_instances_user WITH PASSWORD '%pwUser1%';
 CREATE USER insert_user WITH PASSWORD '%pwUser2%';
 CREATE USER read_only_user WITH PASSWORD '%pwUser3%';

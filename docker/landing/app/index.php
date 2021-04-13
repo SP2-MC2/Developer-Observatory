@@ -60,7 +60,8 @@ if((strlen($token) == 12 and preg_match("/^[0-9a-z]+$/", $token)) and (strlen($t
     }
 } else {
     $webpageMessageHeader = "";
-    $webpageMessage = "Your token is invalid. Please click on the link in the E-Mail.";
+    $webpageMessage = "You must access this site with a token";
+    //$webpageMessage = "Your token is invalid. Please click on the link in the E-Mail.";
     $webpageRedirect = False;
     include(__DIR__."/static/error.php");
 }

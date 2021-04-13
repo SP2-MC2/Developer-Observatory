@@ -20,8 +20,6 @@ services:
   
   db:
     build: ./postgres
-    environment:
-      - POSTGRES_PASSWORD=asjdkjwe
     networks:
       - devob-main
     volumes:
@@ -33,6 +31,15 @@ services:
       - devob-main
     ports:
       - "6379:6379"
+
+  control:
+    build: ./control
+    depends_on:
+      - db
+    networks:
+      - devob-main
+    ports:
+      - "8080:80"
 
 volumes:
   devob-data:
