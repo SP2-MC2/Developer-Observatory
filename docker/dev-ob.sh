@@ -30,43 +30,43 @@ elif [[ $1 == "install" ]]; then
 elif [[ $1 == "configure" ]]; then
     echo "Generating configuration files and secrets"
 
-    cp config/landing.php landing/webpageConf/config.php
-    cp config/nginx.conf nginx/
-    cp config/Postgres.docker postgres/Dockerfile
-    cp config/dbSchema.sql postgres/
-    cp config/taskSchema.sql postgres/
-    cp config/redis.conf redis/
+    cp config/landing.php containers/landing/webpageConf/config.php
+    cp config/nginx.conf containers/nginx/
+    cp config/Postgres.docker containers/postgres/Dockerfile
+    cp config/dbSchema.sql containers/postgres/
+    cp config/taskSchema.sql containers/postgres/
+    cp config/redis.conf containers/redis/
 
     #Generate Passwords for the database in the first run. Replace in the files directly
     pwUser0=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     pwUser1=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     pwUser2=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     pwUser3=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
-    sed -i "s|%pwUser0%|$pwUser0|g" postgres/Dockerfile
-    sed -i "s|%pwUser1%|$pwUser1|g" postgres/dbSchema.sql
-    sed -i "s|%pwUser2%|$pwUser2|g" postgres/dbSchema.sql
-    sed -i "s|%pwUser3%|$pwUser3|g" postgres/dbSchema.sql
+    sed -i "s|%pwUser0%|$pwUser0|g" containers/postgres/Dockerfile
+    sed -i "s|%pwUser1%|$pwUser1|g" containers/postgres/dbSchema.sql
+    sed -i "s|%pwUser2%|$pwUser2|g" containers/postgres/dbSchema.sql
+    sed -i "s|%pwUser3%|$pwUser3|g" containers/postgres/dbSchema.sql
 
-    sed -i "s|%pwUser1%|$pwUser1|g" landing/webpageConf/config.php
+    sed -i "s|%pwUser1%|$pwUser1|g" containers/landing/webpageConf/config.php
     #sed -i "s|%pwUser3%|$pwUser3|g" landing/submit/configGetCode.py
     #sed -i "s|%pwUser2%|$pwUser2|g" landing/submit/configSubmitDB.py
 
     # Generate configuration file for landing server
-    sed -i "s|%dailyMaxInstances%|$dailyMaxInstances|g" landing/webpageConf/config.php
-    sed -i "s|%maxInstances%|$maxInstances|g" landing/webpageConf/config.php
-    sed -i "s|%recaptchaSiteKey%|$recaptchaSiteKey|g" landing/webpageConf/config.php
-    sed -i "s|%recaptchaSecret%|$recaptchaSecret|g" landing/webpageConf/config.php
-    sed -i "s|%awsLang%|$awsLang|g" landing/webpageConf/config.php
-    sed -i "s|%awsAccessKey%|$awsAccessKey|g" landing/webpageConf/config.php
-    sed -i "s|%awsSecretKey%|$awsSecretKey|g" landing/webpageConf/config.php
-    sed -i "s|%awsRegion%|$awsRegion|g" landing/webpageConf/config.php
-    sed -i "s|%awsImageId%|$awsImageId|g" landing/webpageConf/config.php
-    sed -i "s|%awsInstanceType%|$awsInstanceType|g" landing/webpageConf/config.php
-    sed -i "s|%awsSecurityGroupID%|$awsSecurityGroupID|g" landing/webpageConf/config.php
-    sed -i "s|%sshKeyName%|$awsSshKeyName|g" landing/webpageConf/config.php
-    sed -i "s|%poolSize%|$poolSize|g" landing/webpageConf/config.php
-    sed -i "s|%tokenGetUrl%|$tokenGetUrl|g" landing/webpageConf/config.php
-    sed -i "s|%tokenSetUrl%|$tokenSetUrl|g" landing/webpageConf/config.php
+    sed -i "s|%dailyMaxInstances%|$dailyMaxInstances|g" containers/landing/webpageConf/config.php
+    sed -i "s|%maxInstances%|$maxInstances|g" containers/landing/webpageConf/config.php
+    sed -i "s|%recaptchaSiteKey%|$recaptchaSiteKey|g" containers/landing/webpageConf/config.php
+    sed -i "s|%recaptchaSecret%|$recaptchaSecret|g" containers/landing/webpageConf/config.php
+    sed -i "s|%awsLang%|$awsLang|g" containers/landing/webpageConf/config.php
+    sed -i "s|%awsAccessKey%|$awsAccessKey|g" containers/landing/webpageConf/config.php
+    sed -i "s|%awsSecretKey%|$awsSecretKey|g" containers/landing/webpageConf/config.php
+    sed -i "s|%awsRegion%|$awsRegion|g" containers/landing/webpageConf/config.php
+    sed -i "s|%awsImageId%|$awsImageId|g" containers/landing/webpageConf/config.php
+    sed -i "s|%awsInstanceType%|$awsInstanceType|g" containers/landing/webpageConf/config.php
+    sed -i "s|%awsSecurityGroupID%|$awsSecurityGroupID|g" containers/landing/webpageConf/config.php
+    sed -i "s|%sshKeyName%|$awsSshKeyName|g" containers/landing/webpageConf/config.php
+    sed -i "s|%poolSize%|$poolSize|g" containers/landing/webpageConf/config.php
+    sed -i "s|%tokenGetUrl%|$tokenGetUrl|g" containers/landing/webpageConf/config.php
+    sed -i "s|%tokenSetUrl%|$tokenSetUrl|g" containers/landing/webpageConf/config.php
 
 elif [[ $1 == "start" ]]; then
     docker-compose build && docker-compose up
@@ -78,10 +78,10 @@ elif [[ $1 == "reset" ]]; then
     docker-compose down
 
     # Clean generated configuration files
-    rm landing/webpageConf/config.php
-    rm nginx/nginx.conf
-    rm postgres/*.sql
-    rm postgres/Dockerfile
+    rm containers/landing/webpageConf/config.php
+    rm containers/nginx/nginx.conf
+    rm containers/postgres/*.sql
+    rm containers/postgres/Dockerfile
 
     # Purge db volume
     docker volume rm docker_devob-data
