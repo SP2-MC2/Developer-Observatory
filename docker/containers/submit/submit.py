@@ -17,13 +17,11 @@ from flask import redirect, request, current_app
 
 
 app = Flask(__name__)
-app.config.from_object('configGetCode')
+app.config.from_object('configSubmit')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 MAX_LENGTH = 1000000 #max length for json size
 NUM_RETRY = 5 # retry to fetch
-TASKFILES_BASE_PATH = "%taskFilesBasePath%"
-
 
 db = SQLAlchemy(app)
 
@@ -155,12 +153,65 @@ def get_ipynb(userid, token):
     if row == None:
         user_row = CreatedInstances.query.filter_by(userid = userid).first()
         condition_row = Conditions.query.filter_by(condition = user_row.condition).first()
-        with open(TASKFILES_BASE_PATH+condition_row.filename) as file:
+        with open(app.config["TASKFILES_BASE_PATH"]+condition_row.filename) as file:
             return file.read()
         
     return json.dumps(row.code)
 
 
+@app.route('/survey/<string:userid>/<string:token>')
+def redirectToSurvey(userid, token):
+    row = CreatedInstances.query.filter_by(userid = userid).first()
+    if row == None:
+        return 'userid ' + userid + ' does not exist!'
+
+    # TODO: Terminate Docker instances here
+    #ec2 = boto3.resource('ec2')
+    #instanceid = [row.instanceid]
+    
+	# shut down the instance
+    if row.terminated != 'true':
+        """
+        try:
+            ec2.instances.filter(InstanceIds=instanceid).terminate()
+            row.terminated = 'true'
+            db.session.commit()
+        except Exception as e:
+            print(e)
+        """
+
+    url = app.config["FINAL_SURVEY_URL"] + "/?uid="+userid+"&tok="+token+"&newtest=Y"
+    if(not (url.startswith("http://") or url.startswith("https://"))):
+        url = "https://" + url
+    return redirect(url, code=302)
+
+
+@app.route('/submit', methods=['POST'])
+def submit():
+    data = json.loads(request.data)
+    if data['auth-token'] == "q9c(,}=C{mQD~)2#&t3!`fLQ3zk`9,":
+        try:
+            jsonPayload = json.loads(data['json-payload'])
+            if(len(jsonPayload) <= MAX_LENGTH):
+                if (jsonPayload['type'] == 'pasted'):
+                    row = CopyPastedCode(jsonPayload['user_id'], jsonPayload['token'], jsonPayload['tasknum'], jsonPayload['cellid'], jsonPayload['code'])
+                    db.session.add(row)
+                    db.session.commit()
+                elif (jsonPayload['type'] == 'code'):
+                    row = Jupyter(jsonPayload['user_id'], jsonPayload['token'], jsonPayload['code'], jsonPayload['time'], jsonPayload['status']) 
+                    db.session.add(row)
+                    db.session.commit()
+            else:
+                return "Input exceeded max length"
+        except Exception as e:
+            print(e)
+            db.session.rollback()
+            return "Error inserting json payload into database."
+            
+        return "Successfully inserted json payload into database."
+    else:
+        abort(400)        
+
 if __name__ == '__main__':
     #app.debug = True
-    app.run(host='127.0.0.1', port=6201)
+    app.run(host='127.0.0.1', port=6200)

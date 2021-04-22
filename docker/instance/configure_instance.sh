@@ -7,7 +7,6 @@ cp config/app.py config/compiled_app.py
 # Python services
 sed -i "s|$urlPlaceHolder|$landingURL|g" config/compiled_app.py
 
-
 # Notebook files
 cp config/custom.js nb_template/
 sed -i "s|$urlPlaceHolder|$landingURL|g" nb_template/custom.js

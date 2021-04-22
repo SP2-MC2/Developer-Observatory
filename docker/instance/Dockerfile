@@ -25,6 +25,6 @@ COPY nb_template/nbconfig/ /home/jupyter/.jupyter/nbconfig/
 # Copy configurations
 COPY config/supervisord.conf /etc/supervisor/supervisord.conf
 COPY config/nginxTaskServer.conf /etc/nginx/sites-enabled/default
-COPY config/app_compiled.py .
+COPY config/app_compiled.py ./app.py
 
 CMD ["/usr/bin/supervisord"]

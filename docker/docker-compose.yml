@@ -41,12 +41,19 @@ services:
     ports:
       - "8080:80"
 
-  manager:
-    build: ./containers/manager
+  #manager:
+  #build: ./containers/manager
+  #depends_on:
+  #- redis
+  #networks:
+  #- devob-host
+
+  submit:
+    build: ./containers/submit
     depends_on:
-      - redis
+      - db
     networks:
-      - devob-host
+      - devob-main
   
 volumes:
   devob-data:

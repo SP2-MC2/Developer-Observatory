@@ -1,1 +1,0 @@
-SQLALCHEMY_DATABASE_URI = "postgresql://insert_user:%pwUser2%@localhost/notebook"

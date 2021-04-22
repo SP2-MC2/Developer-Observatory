@@ -1,7 +1,5 @@
 source ./developer-observatory.conf
 
-taskfilesBasePath="$PWD/../task_generation/generated/"
-
 RED='\033[1;31m'
 NC='\033[0m' # No Color
 
@@ -28,7 +26,14 @@ if [[ -z $1 ]]; then
 elif [[ $1 == "install" ]]; then
     echo "Installing developer observatory"
 elif [[ $1 == "configure" ]]; then
-    echo "Generating configuration files and secrets"
+    if [[ -d "generator/generated" ]]; then
+        echo "Generating configuration files and secrets"
+        cp -r generator/generated containers/submit/tasks
+    else
+        echo -ne "${RED} It seems there are no tasks generated. Please generate "
+        echo -e  "tasks first before configuring. ${NC}"
+        exit 1
+    fi
 
     cp config/landing.php containers/landing/webpageConf/config.php
     cp config/nginx.conf containers/nginx/
@@ -36,6 +41,7 @@ elif [[ $1 == "configure" ]]; then
     cp config/dbSchema.sql containers/postgres/
     cp config/taskSchema.sql containers/postgres/
     cp config/redis.conf containers/redis/
+    cp config/submit.py containers/submit/configSubmit.py
 
     #Generate Passwords for the database in the first run. Replace in the files directly
     pwUser0=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
@@ -48,7 +54,10 @@ elif [[ $1 == "configure" ]]; then
     sed -i "s|%pwUser3%|$pwUser3|g" containers/postgres/dbSchema.sql
 
     sed -i "s|%pwUser1%|$pwUser1|g" containers/landing/webpageConf/config.php
-    #sed -i "s|%pwUser3%|$pwUser3|g" landing/submit/configGetCode.py
+    sed -i "s|%finalSurveyURL%|$finalSurveyURL|g" containers/landing/webpageConf/config.php
+
+    sed -i "s|%pwUser2%|$pwUser2|g" containers/submit/configSubmit.py
+
     #sed -i "s|%pwUser2%|$pwUser2|g" landing/submit/configSubmitDB.py
 
     # Generate configuration file for landing server
@@ -68,6 +77,10 @@ elif [[ $1 == "configure" ]]; then
     sed -i "s|%tokenGetUrl%|$tokenGetUrl|g" containers/landing/webpageConf/config.php
     sed -i "s|%tokenSetUrl%|$tokenSetUrl|g" containers/landing/webpageConf/config.php
 
+    cd instance/
+    . configure_instance.sh
+    cd ..
+
 elif [[ $1 == "start" ]]; then
     docker-compose build && docker-compose up
 elif [[ $1 == "reset" ]]; then
@@ -77,11 +90,15 @@ elif [[ $1 == "reset" ]]; then
     # Run docker-compose down
     docker-compose down
 
+    # Clean task files
+    rm -r containers/submit/tasks
+
     # Clean generated configuration files
     rm containers/landing/webpageConf/config.php
     rm containers/nginx/nginx.conf
     rm containers/postgres/*.sql
     rm containers/postgres/Dockerfile
+    rm containers/submit/configSubmit.py
 
     # Purge db volume
     docker volume rm docker_devob-data
