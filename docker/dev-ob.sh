@@ -42,6 +42,7 @@ elif [[ $1 == "configure" ]]; then
     cp config/taskSchema.sql containers/postgres/
     cp config/redis.conf containers/redis/
     cp config/submit.py containers/submit/configSubmit.py
+    cp config/manager_config.py manager/
 
     #Generate Passwords for the database in the first run. Replace in the files directly
     pwUser0=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
@@ -57,6 +58,8 @@ elif [[ $1 == "configure" ]]; then
     sed -i "s|%finalSurveyURL%|$finalSurveyURL|g" containers/landing/webpageConf/config.php
 
     sed -i "s|%pwUser2%|$pwUser2|g" containers/submit/configSubmit.py
+
+    sed -i "s|%poolSize%|$poolSize|g" manager/manager_config.py
 
     #sed -i "s|%pwUser2%|$pwUser2|g" landing/submit/configSubmitDB.py
 
@@ -99,6 +102,7 @@ elif [[ $1 == "reset" ]]; then
     rm containers/postgres/*.sql
     rm containers/postgres/Dockerfile
     rm containers/submit/configSubmit.py
+    rm manager/manager_config.py
 
     # Purge db volume
     docker volume rm docker_devob-data

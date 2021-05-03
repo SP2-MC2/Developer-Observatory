@@ -13,20 +13,21 @@ $userId = htmlspecialchars($_POST["userid"]);
 $token2 = htmlspecialchars($_POST["token2"]);
 
 if((strlen($userId) == 12 and preg_match("/^[0-9a-z]+$/", $userId)) and (strlen($token2) == 12 and preg_match("/^[0-9a-z]+$/", $token2))){
-    $sth = $connect->prepare('SELECT ec2instance as ec2instance, hash as hash FROM "createdInstances" LEFT JOIN "conditions" ON "createdInstances".condition = "conditions".condition WHERE userid = :userid;');
+    $sth = $connect->prepare('SELECT instanceid as instanceid, hash as hash FROM "createdInstances" LEFT JOIN "conditions" ON "createdInstances".condition = "conditions".condition WHERE userid = :userid;');
     $sth->bindParam(':userid', $userId);
     $sth->execute();
     $results = $sth->fetch(PDO::FETCH_BOTH);
-    if(strlen($results["ec2instance"]) > 1){
-        if($results["ec2instance"] == 'error'){
+    if(strlen($results["instanceid"]) > 1){
+        if($results["instanceid"] == 'error'){
             echo("error");
         } else {
-            $headers = get_headers("http://".$results["ec2instance"]."/nb/tree", 1);
+            /*$headers = get_headers("http://".$_SERVER["SERVER_NAME"]."/proxy/".$results["instanceid"]."/nb/tree", 1);
             if ($headers[0] == 'HTTP/1.1 200 OK') {
-                echo("http://".$results["ec2instance"]."/?userId=".$userId."&u=".$results["hash"]."&token=".$token2);
+                echo("/proxy/".$results["instanceid"]."/?userId=".$userId."&u=".$results["hash"]."&token=".$token2);
             } else {
                 echo("br");
-            }
+            }*/
+            echo("/proxy/".$results["instanceid"]."/?userId=".$userId."&u=".$results["hash"]."&token=".$token2);
         }
     } else {
         echo("nr");

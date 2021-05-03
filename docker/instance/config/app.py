@@ -56,7 +56,7 @@ def init():
         task_file.retrieve(remote_task_file+user_id+"/"+token, target_file)
         
     #Prepare the response to the client -> Redirect + set cookies for uid and token
-    response = make_response(redirect('/nb/notebooks/tasks.ipynb'))
+    response = make_response(redirect('nb/notebooks/tasks.ipynb'))
     response.set_cookie('userId', user_id)
     response.set_cookie('token', token)
     
@@ -107,4 +107,4 @@ def not_found(error):
 
 if __name__ == '__main__':
     #app.debug = True
-    app.run(host='127.0.0.1', port=60000)
+    app.run(host='0.0.0.0', port=60000)

@@ -2,7 +2,7 @@ FROM ubuntu
 
 WORKDIR /usr/src/app
 
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -yqq nginx python3-pip \
+RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -yqq python3-pip \
     python3-flask \
     python3-requests \
     supervisor
@@ -21,10 +21,13 @@ COPY nb_template/notebook.html /usr/local/lib/python3.8/dist-packages/notebook/t
 COPY nb_template/jupyter_notebook_config.py /home/jupyter/.jupyter/
 COPY nb_template/nbconfig/ /home/jupyter/.jupyter/nbconfig/
 
-
 # Copy configurations
 COPY config/supervisord.conf /etc/supervisor/supervisord.conf
-COPY config/nginxTaskServer.conf /etc/nginx/sites-enabled/default
 COPY config/compiled_app.py ./app.py
 
-CMD ["/usr/bin/supervisord"]
+# Copy runscript
+COPY run_instance.sh .
+
+EXPOSE 60000 8888
+
+CMD ["./run_instance.sh"]

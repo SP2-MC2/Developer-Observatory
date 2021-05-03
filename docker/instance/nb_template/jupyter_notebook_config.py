@@ -64,7 +64,7 @@
 ## The base URL for the notebook server.
 #
 #  Leading and trailing slashes can be omitted, and will automatically be added.
-c.NotebookApp.base_url = '/nb'
+c.NotebookApp.base_url = '/proxy/%contID%/nb'
 
 ## Specify what command to use to invoke a web browser when opening the notebook.
 #  If not specified, the default browser will be determined by the `webbrowser`
@@ -141,7 +141,7 @@ c.NotebookApp.enable_mathjax = False
 #c.NotebookApp.iopub_msg_rate_limit = 0
 
 ## The IP address the notebook server will listen on.
-#c.NotebookApp.ip = 'localhost'
+c.NotebookApp.ip = '0.0.0.0'
 
 ## Supply extra arguments that will be passed to Jinja environment.
 #c.NotebookApp.jinja_environment_options = {}

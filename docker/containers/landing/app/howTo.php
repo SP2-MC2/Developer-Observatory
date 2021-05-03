@@ -170,28 +170,6 @@ if(isset($_POST["g-recaptcha-response"])){
                         $sth->bindParam(':category', $resultsCat['category']);
                         $sth->execute();
                         
-                        $instanceIds = array();
-                        $instanceIds[0] = $instanceId;
-                        
-                        $ec2Client = Aws\Ec2\Ec2Client::factory(array(
-                            'credentials' => array(
-                                'key'    => $awsAccessKey,
-                                'secret' => $awsSecretKey
-                            ),
-                            'region' => $awsRegion, // (e.g., us-east-1)
-                            'version' => 'latest'
-                        ));
-                        
-                        // Set nametag
-                        $result = $ec2Client->createTags(array(
-                            'Resources' => $instanceIds,
-                            'Tags' => array(
-                                'Tag' => array(
-                                   'Key' => 'Name',
-                                   'Value' => 'StudyUser'.$token
-                               )
-                            )
-                        ));
                         // Invalidate token
                         $curl = curl_init();
                         curl_setopt_array($curl, array(
@@ -201,8 +179,6 @@ if(isset($_POST["g-recaptcha-response"])){
                         ));
                         $respToken = curl_exec($curl);
                         
-                        //Let pool check run
-                        exec($poolCheckCommand);
                     }
                 } else {
                     $webpageMessageHeader = "Error:";
