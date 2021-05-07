@@ -34,7 +34,7 @@ class Jupyter(db.Model):
     token = db.Column(db.String())
     code = db.Column(JSON)
     time = db.Column(JSON)
-    status = db.Column(db.String(1)) # B: "Ok, got it!" button was hit, R: runing btn is hit, N: the next btn is hit, F: final submission
+    status = db.Column(db.String(1)) # B: "Ok, got it!" button was hit, R: runing btn is hit, N: the skip btn is hit, S: next task, F: final submission
     date = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __init__(self, userid, token, code, time, status):

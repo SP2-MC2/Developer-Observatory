@@ -50,6 +50,7 @@ services:
   
 volumes:
   devob-data:
+    name: devob-data
 
 networks:
   devob-main:
