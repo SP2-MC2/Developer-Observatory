@@ -2,7 +2,7 @@
 # 
 # This software may be modified and distributed under the terms
 # of the MIT license.  See the LICENSE file for details.
-import docker, sys, redis
+import docker, sys, redis, signal, os
 from time import sleep
 import manager_config as config
 
@@ -11,6 +11,17 @@ REDIS_QUEUE = "queuedInstances"
 REDIS_BOOTING_COUNTER = "queuedInstancesBooting"
 CHECK_INTERVAL = 5
 POOL_SIZE = 1
+
+STARTED_CONTAINERS = []
+
+def sigint_handler(sig, frame):
+    print("Interrupt received, stopping all containers")
+    cont_names = [c.name for c in STARTED_CONTAINERS]
+
+    if len(cont_names) > 0:
+        os.execvp("docker", ["docker", "container", "stop", *cont_names])
+    else:
+        sys.exit(0)
 
 def check_cwd():
     # TODO: Implement directory checks
@@ -28,7 +39,10 @@ def create_container(client, tag):
     
     net = nets[0]
 
-    return client.containers.run(tag, detach=True, auto_remove=True, network=net.name)
+    cont = client.containers.run(tag, detach=True, auto_remove=True, network=net.name)
+    STARTED_CONTAINERS.append(cont)
+
+    return cont
 
 
 def dint(s):
@@ -49,6 +63,10 @@ if __name__ == "__main__":
 
     print("Developer Observatory Docker Management Script")
     print("Starting...")
+
+    # Setup signal handler
+    signal.signal(signal.SIGINT, sigint_handler)
+
 
     # Setup docker
     client = docker.from_env()

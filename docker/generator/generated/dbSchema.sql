@@ -1,2 +1,1 @@
-INSERT INTO "conditions" VALUES(1, 0, 'pytest_pizza.ipynb', 'b440829b900a2e499d3a7321c991f1abbc1406b1475f9b580040163ba429f107');
-INSERT INTO "conditions" VALUES(1, 1, 'pytest_barbeque.ipynb', '1503ebd88613671ae3f9ea92547be870ecc31da15afb7da5a3c2cf3d3f8676e2');
+INSERT INTO "conditions" VALUES(1, 0, 'test2_pizza_[1_t2].ipynb', '490a0211efb992232b7079988abf3714c645b4af423da3744069c788eee3d38c');

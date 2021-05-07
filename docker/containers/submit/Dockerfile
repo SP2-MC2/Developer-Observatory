@@ -1,5 +1,7 @@
 FROM tiangolo/uwsgi-nginx-flask:python3.8
 
-COPY submit.py /app/app.py
+RUN pip install SQLAlchemy Flask-SQLAlchemy psycopg2 pygments
+
+COPY submit.py /app/main.py
 COPY configSubmit.py /app/
-COPY tasks/ app/tasks/
+COPY tasks/ /app/tasks/

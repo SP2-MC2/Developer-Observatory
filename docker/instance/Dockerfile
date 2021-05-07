@@ -4,8 +4,7 @@ WORKDIR /usr/src/app
 
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -yqq python3-pip \
     python3-flask \
-    python3-requests \
-    supervisor
+    python3-requests
 
 RUN pip3 install -U pip jupyter
 
@@ -22,7 +21,6 @@ COPY nb_template/jupyter_notebook_config.py /home/jupyter/.jupyter/
 COPY nb_template/nbconfig/ /home/jupyter/.jupyter/nbconfig/
 
 # Copy configurations
-COPY config/supervisord.conf /etc/supervisor/supervisord.conf
 COPY config/compiled_app.py ./app.py
 
 # Copy runscript

@@ -28,7 +28,7 @@ function is_valid_callback($subject){
       'static', 'null', 'true', 'false');
 
     return preg_match($identifier_syntax, $subject)
-        && ! in_array(strtolower($subject, 'UTF-8'), $reserved_words);
+        && ! in_array(strtolower($subject), $reserved_words);
 }
 
 

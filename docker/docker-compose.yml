@@ -57,5 +57,3 @@ networks:
   devob-instances:
     driver: bridge
     internal: true
-  devob-host:
-    driver: host

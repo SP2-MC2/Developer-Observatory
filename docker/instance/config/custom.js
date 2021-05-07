@@ -13,7 +13,7 @@ function heartbeatQuery() {
     $.ajax(
         {
             type: "GET",
-            url: "%landingURL%/heartbeat.php?userId="+userId+"&ec2instance="+window.location.hostname+"&token="+token,
+            url: "/heartbeat.php?userId="+userId+"&ec2instance="+window.location.hostname+"&token="+token,
             contentType: 'text/plain',
             crossDomain: true,
             dataType: 'jsonp',
@@ -56,18 +56,24 @@ var focusTime = setInterval(function() {
 function scrollToCurrentTask(){
     id = 1 + (getCurrentTaskNumber() * 2);
     // Scroll
-    window.scrollTo(0, $("#cell"+id).offset().top);
+    let elm = $("#cell"+id);
+    if (elm.offset() != undefined) {
+        window.scrollTo(0, $("#cell"+id).offset().top);
+    }
 }
 
 function submitCode(user_id, code, stat, token) {
+    let parts = Jupyter.notebook.config.base_url.split("/");
      $.ajax({ 
-        url: "/submit",
+        url: `/${parts[1]}/${parts[2]}/submit`,
         type: "POST",
         data: JSON.stringify({"type": "code", "user_id": user_id, "code": code, "time": {"focusTime": diffTimeFocus, "execTime":JSON.stringify(timeStampArray)}, "status": stat, "token": token}),
         contentType: "application/json; charset=utf-8",
         success: function(result) {
             if(stat == 'f'){
-                window.location.replace("/survey");
+                var userId = document.cookie.replace(/(?:(?:^|.*;\s*)userId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+                var token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+                window.location.replace(`/survey/${userId}/${token}`);
             }
         },
         error: function() {
@@ -179,7 +185,7 @@ define([
             //Skipped task
             var answerForSkipTask = []
             $('#no-thanks').click(function(){ // no thanks button in the modal
-                $('#skippedTaskModal').modal();
+                //$('#skippedTaskModal').modal();
                 IPython.notebook.save_notebook();
                 if (getCurrentTaskNumber() < getTaskCountInNotebook()){
                     setCurrentTaskNumber(getCurrentTaskNumber()+1);
@@ -259,31 +265,34 @@ define([
                 $('#skippedTaskModalIFrame').on('load', function (e) {
                     $("#skippedTaskModalIFrame #Plug").hide();
                 });
-                })
+            })
             $('#skippedTaskModal').on('hidden.bs.modal', function (e) {
                 scrollToCurrentTask()
-                })
+            })
             nsNextBtn.attr('id', 'not_solved_next_btn').attr('class', 'btn btn-danger btn-task');
             nsNextBtn.attr('style','float: right;margin-right:10px;');
             $('div#notebook-container').append(nsNextBtn);
 
             //Run and Test
             var execBtn = $('<button/>').text('Run and Test').click(function(){
+                /*
                 var id = $(this).parent().attr('id');
                 var cellId = parseInt(id.replace('cell',''));
-                var tasknum = IPython.notebook.get_cell(cellId-1).metadata.tasknum;
+                var tasknum = IPython.notebook.get_cell(cellId-1).metadata.tasknum;*/
+                var tasknum = getCurrentTaskNumber();
                 console.log(tasknum);
                 timeExecMeasure(tasknum);
                 // Start a timeout to select the cell before running the code.
                 setTimeout(function() {
                     IPython.notebook.save_notebook();
                     IPython.notebook.execute_selected_cells();
+                    /* Disabeled for 2021 study
                     var saved = setInterval(function() {
                         if (!IPython.notebook.dirty) {
                             clearInterval(saved);
                             submitCode(userId, IPython.notebook.toJSON(), 'r', token);
                         }
-                    }, 500);
+                    }, 500);*/
                 });
                 
                 var currentdate = new Date(); 
@@ -334,6 +343,7 @@ define([
             });*/
 
             //Paste behavior detection
+            /* Disabeled for 2021 study
             var numDiv = $('#notebook-container > div').length;
             for (i = 1; i <= numDiv; ++i) {
                 if ($('#cell' + i + ' > button').length > 0) { //only code cell
@@ -379,7 +389,7 @@ define([
                         }
                     });
                 }
-            }
+            }*/
             
             $('.inner_cell').on('shown.bs.popover', function () {
                 var $pop = $(this);

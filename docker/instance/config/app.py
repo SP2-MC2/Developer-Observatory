@@ -4,7 +4,7 @@
 #! of the MIT license.  See the LICENSE file for details.
 
 from flask import Flask, redirect, request, make_response, jsonify
-from shutil import copyfile
+from shutil import copyfile, chown
 import json
 import requests
 import os.path
@@ -36,13 +36,14 @@ def sendData(data):
     https = urllib3.PoolManager()
     dataRaw = {}
     dataRaw['auth-token'] = "q9c(,}=C{mQD~)2#&t3!`fLQ3zk`9," # our client authentication, should be switched to a dynamic token
-    dataRaw['json-payload'] = json.dumps(data).encode('utf-8')
+    dataRaw['json-payload'] = json.dumps(data)
     encoded_body = json.dumps(dataRaw).encode('utf-8')
     https.request('POST', DB_URL, headers={'Content-Type': 'application/json'}, body=encoded_body)
 
 
 @app.route('/')
 def init():
+    print(request.args)
     user_id = request.args.get('userId') 
     token = request.args.get('token')
     user_data = {}
@@ -54,6 +55,9 @@ def init():
         #If not, then request data for this user from the landing page
         task_file = urllib.request.URLopener()
         task_file.retrieve(remote_task_file+user_id+"/"+token, target_file)
+        chown(target_file, user="jupyter", group="jupyter")
+
+
         
     #Prepare the response to the client -> Redirect + set cookies for uid and token
     response = make_response(redirect('nb/notebooks/tasks.ipynb'))
@@ -78,7 +82,7 @@ def forward_to_survey():
             user_data = json.load(data_file)
             user_id = user_data["user_id"]
             token = user_data["token"]
-            return redirect(DB_HOST+"/survey/"+user_id+"/"+token)
+            return redirect("/survey/"+user_id+"/"+token)
     except Exception:
         pass
 

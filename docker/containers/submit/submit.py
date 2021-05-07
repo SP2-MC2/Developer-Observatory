@@ -149,6 +149,7 @@ def getcode(userid, token):
 # Or if new user, then return default task file.
 @app.route('/get_ipynb/<string:userid>/<string:token>')
 def get_ipynb(userid, token):
+    print("Hello debug!")
     row = Jupyter.query.filter_by(userid = userid).filter_by(token = token).order_by(Jupyter.id.desc()).first()
     if row == None:
         user_row = CreatedInstances.query.filter_by(userid = userid).first()
@@ -170,8 +171,8 @@ def redirectToSurvey(userid, token):
     #instanceid = [row.instanceid]
     
 	# shut down the instance
+    """
     if row.terminated != 'true':
-        """
         try:
             ec2.instances.filter(InstanceIds=instanceid).terminate()
             row.terminated = 'true'
@@ -183,7 +184,10 @@ def redirectToSurvey(userid, token):
     url = app.config["FINAL_SURVEY_URL"] + "/?uid="+userid+"&tok="+token+"&newtest=Y"
     if(not (url.startswith("http://") or url.startswith("https://"))):
         url = "https://" + url
+    print(url)
     return redirect(url, code=302)
+
+    #return "Hello"
 
 
 @app.route('/submit', methods=['POST'])
@@ -214,4 +218,4 @@ def submit():
 
 if __name__ == '__main__':
     #app.debug = True
-    app.run(host='127.0.0.1', port=6200)
+    app.run(host='localhost', port=6200)
