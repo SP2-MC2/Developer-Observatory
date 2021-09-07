@@ -5,8 +5,8 @@ services:
     depends_on:
       - landing-server
     networks:
-      - devob-main
-      - devob-instances
+      - main
+      - instances
     ports:
       - "80:80"
 
@@ -16,19 +16,19 @@ services:
       - db
       - redis
     networks:
-      - devob-main
+      - main
   
   db:
     build: ./containers/postgres
     networks:
-      - devob-main
+      - main
     volumes:
-      - "devob-data:/var/lib/postgresql/data"
+      - "data:/var/lib/postgresql/data"
 
   redis:
     build: ./containers/redis
     networks:
-      - devob-main
+      - main
     ports:
       - "6379:6379"
 
@@ -37,7 +37,7 @@ services:
     depends_on:
       - db
     networks:
-      - devob-main
+      - main
     ports:
       - "8080:80"
 
@@ -46,15 +46,15 @@ services:
     depends_on:
       - db
     networks:
-      - devob-main
+      - main
   
 volumes:
-  devob-data:
+  data:
     name: devob-data
 
 networks:
-  devob-main:
+  main:
     driver: bridge
-  devob-instances:
+  instances:
     driver: bridge
     internal: true

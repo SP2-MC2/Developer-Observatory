@@ -2,6 +2,10 @@
 
 source ./developer-observatory.conf
 
+dockerProjectName="devob"
+instancesNetwork="${dockerProjectName}_instances"
+
+# Colors
 RED='\033[1;31m'
 NC='\033[0m' # No Color
 
@@ -52,6 +56,8 @@ build_config() {
     cp config/submit.py containers/submit/configSubmit.py
     cp config/manager_config.py manager/
 
+    sed -i "s|%instancesNetwork%|$instancesNetwork|g" manager/manager_config.py
+
 
     sed -i "s|%pwUser1%|$pwUser1|g" containers/landing/webpageConf/config.php
     sed -i "s|%finalSurveyURL%|$finalSurveyURL|g" containers/landing/webpageConf/config.php
@@ -101,7 +107,7 @@ elif [[ $1 == "install" ]]; then
     pip install --user docker redis
 
 elif [[ $1 == "generate" ]]; then
-    docker build generator/ -t "devob-generator"
+    docker build generator/ -t "$dockerProjectName-generator"
 
     if [[ ! -d generator/generated ]]; then
         mkdir generator/generated
@@ -115,13 +121,13 @@ elif [[ $1 == "configure" ]]; then
 
 elif [[ $1 == "start" ]]; then
     build_config
-    docker-compose build && docker-compose -p dev-ob up
+    docker-compose build && docker-compose -p $dockerProjectName up
 elif [[ $1 == "reset" ]]; then
     echo -e "${RED} WARNING: THIS WILL CLEAR ALL OF YOUR DATA, INCLUDING STUDY RESULTS${NC}"
     prompt_confirm "Reset this developer observatory to its initial state" || exit 0
 
     # Run docker-compose down
-    docker-compose -p dev-ob down
+    docker-compose -p $dockerProjectName down
 
     # Clean secrets
     rm -f config/.secrets

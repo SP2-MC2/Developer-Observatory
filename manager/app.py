@@ -29,7 +29,7 @@ def create_container(client, tag):
     nets = client.networks.list(names=config.NETWORK_NAME)
     if len(nets) == 0:
         raise Exception("ERROR: Couldn't get docker network to attach instance"
-                        "to, are the main containers started?")
+                        " to, are the main containers started?")
     
     net = nets[0]
 
