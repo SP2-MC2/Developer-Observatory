@@ -27,7 +27,7 @@ build_config() {
     fi
 
     # Configuring secrets, since this has persistence
-    if [[ ! -f config/secrets ]]; then
+    if [[ ! -f config/.secrets ]]; then
         cp config/Postgres.docker containers/postgres/Dockerfile
         cp config/dbSchema.sql containers/postgres/
         cp generator/generated/dbSchema.sql containers/postgres/taskSchema.sql
@@ -41,9 +41,9 @@ build_config() {
         sed -i "s|%pwUser2%|$pwUser2|g" containers/postgres/dbSchema.sql
         sed -i "s|%pwUser3%|$pwUser3|g" containers/postgres/dbSchema.sql
 
-        echo -e "#/bin/bash\npwUser0=$pwUser0\npwUser1=$pwUser1\npwUser2=$pwUser2\npwUser3=$pwUser3" > config/secrets
+        echo -e "#!/bin/bash\npwUser0=$pwUser0\npwUser1=$pwUser1\npwUser2=$pwUser2\npwUser3=$pwUser3" > config/.secrets
     else
-        source config/secrets
+        source config/.secrets
     fi
 
 
@@ -124,17 +124,17 @@ elif [[ $1 == "reset" ]]; then
     docker-compose -p dev-ob down
 
     # Clean secrets
-    rm config/secrets
+    rm -f config/.secrets
 
     # Clean task files
-    rm -r containers/submit/tasks
+    rm -rf containers/submit/tasks
 
     # Clean generated configuration files
-    rm containers/landing/webpageConf/config.php
-    rm containers/postgres/*.sql
-    rm containers/postgres/Dockerfile
-    rm containers/submit/configSubmit.py
-    rm manager/manager_config.py
+    rm -f containers/landing/webpageConf/config.php
+    rm -f containers/postgres/*.sql
+    rm -f containers/postgres/Dockerfile
+    rm -f containers/submit/configSubmit.py
+    rm -f manager/manager_config.py
 
     # Purge db volume
     docker volume rm devob-data

@@ -6,12 +6,6 @@ import docker, sys, redis, signal, os
 from time import sleep
 import manager_config as config
 
-INSTANCE_TAG = "devob-instance"
-REDIS_QUEUE = "queuedInstances"
-REDIS_BOOTING_COUNTER = "queuedInstancesBooting"
-CHECK_INTERVAL = 5
-POOL_SIZE = 1
-
 STARTED_CONTAINERS = []
 
 def sigint_handler(sig, frame):
@@ -80,8 +74,7 @@ if __name__ == "__main__":
     # Setup redis
     r = redis.Redis(host="localhost", port=6379, db=0)
 
-
-
+    print("Starting new containers on-demand, press Ctrl-C to stop...")
     while(True):
         # Ensure booting counter is not negative
         booting = r.get(config.REDIS_BOOTING_COUNTER)
