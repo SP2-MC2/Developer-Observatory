@@ -30,6 +30,9 @@ def create_container(client, tag):
     if len(nets) == 0:
         raise Exception("ERROR: Couldn't get docker network to attach instance"
                         " to, are the main containers started?")
+    elif len(nets) > 1:
+        raise Exception("ERROR: Got multiple networks back from docker, check"
+                        " your networks for duplicates")
     
     net = nets[0]
 
