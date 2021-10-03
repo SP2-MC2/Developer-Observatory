@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS "createdInstances" (
     category integer,
     condition integer,
     instanceid text,
-    terminated boolean DEFAULT false,
+    finished boolean DEFAULT false,
     heartbeat timestamp without time zone default now(),
     "instanceTerminated" boolean DEFAULT false
 );

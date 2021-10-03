@@ -1,16 +1,19 @@
 # Joe Lewis 2021
-# 
+#
 # This software may be modified and distributed under the terms
 # of the MIT license.  See the LICENSE file for details.
-import docker, sys, redis, signal, os
+import docker, sys, redis, signal, os, logging
 from time import sleep
+from threading import Thread, current_thread
 import manager_config as config
 
-STARTED_CONTAINERS = []
+RUNNING_CONTAINERS = []
+logging.basicConfig(stream=sys.stdout)
+log = logging.getLogger()
 
 def sigint_handler(sig, frame):
-    print("Interrupt received, stopping all containers")
-    cont_names = [c.name for c in STARTED_CONTAINERS]
+    print("\nInterrupt received, stopping all containers")
+    cont_names = [c.name for c in RUNNING_CONTAINERS]
 
     if len(cont_names) > 0:
         os.execvp("docker", ["docker", "container", "stop", *cont_names])
@@ -33,13 +36,41 @@ def create_container(client, tag):
     elif len(nets) > 1:
         raise Exception("ERROR: Got multiple networks back from docker, check"
                         " your networks for duplicates")
-    
+
     net = nets[0]
 
     cont = client.containers.run(tag, detach=True, auto_remove=True, network=net.name)
-    STARTED_CONTAINERS.append(cont)
+    RUNNING_CONTAINERS.append(cont)
 
     return cont
+
+def stop_container(client, cont_id):
+    def stop_cont_thread(container):
+        me = current_thread().name
+        thread_log = logging.getLogger("thread." + str(me))
+
+        try:
+            thread_log.debug(f"Thread {me} removing container {container.name}")
+            container.stop()
+        except docker.errors.APIError as e:
+            thread_log.error("API Error from thread: %s", str(e))
+
+    try:
+        cont = client.containers.get(cont_id)
+
+        # Start a thread to stop the container, since this process takes a
+        # while and we dont want to block the main thread.
+        t = Thread(target=stop_cont_thread, kwargs={"container":cont})
+        t.start()
+
+        RUNNING_CONTAINERS.remove(cont)
+        return True
+    except docker.errors.NotFound:
+        print("Couldn't find container", cont_id, file=sys.stderr)
+        return False
+    except ValueError:
+        print("Couldn't remove container", cont_id, "from running containers list", file=sys.stderr)
+        return False
 
 
 def dint(s):
@@ -55,11 +86,13 @@ def dint(s):
 
 if __name__ == "__main__":
     if not check_cwd():
-        print("Looks like the script isn't running in the correct directory, "
+        log.critical("Looks like the script isn't running in the correct directory, "
                 "please run from the root directory of developer observatory")
 
-    print("Developer Observatory Docker Management Script")
-    print("Starting...")
+    log.setLevel(config.LOG_LEVEL)
+    log.info("Developer Observatory Docker Management Script")
+    log.debug("Starting...")
+    log.debug("Debug messages are on")
 
     # Setup signal handler
     signal.signal(signal.SIGINT, sigint_handler)
@@ -67,25 +100,26 @@ if __name__ == "__main__":
 
     # Setup docker
     client = docker.from_env()
-    
-    print("Building most recent version of instance server")
+
+    log.debug("Building most recent version of instance server")
     instance_image, logs = client.images.build(path="./instance/", rm=True,
                                                 tag=config.INSTANCE_TAG)
-    print(f"Finished building {config.INSTANCE_TAG}")
+    log.debug(f"Finished building {config.INSTANCE_TAG}")
 
 
     # Setup redis
     r = redis.Redis(host="localhost", port=6379, db=0)
 
-    print("Starting new containers on-demand, press Ctrl-C to stop...")
+    log.info("Monitoring redis for events, press Ctrl-C to stop...")
     while(True):
+        # -- Add new containers if needed --
         # Ensure booting counter is not negative
         booting = r.get(config.REDIS_BOOTING_COUNTER)
         if booting == None or dint(booting) < 0:
             r.set(config.REDIS_BOOTING_COUNTER, 0)
 
         if dint(r.llen(config.REDIS_QUEUE)) + \
-                dint(r.get(config.REDIS_BOOTING_COUNTER)) <= config.POOL_SIZE:
+                dint(r.get(config.REDIS_BOOTING_COUNTER)) < config.POOL_SIZE:
             try:
                 r.incr(config.REDIS_BOOTING_COUNTER)
 
@@ -93,13 +127,23 @@ if __name__ == "__main__":
                 c = create_container(client, config.INSTANCE_TAG)
 
                 r.rpush(config.REDIS_QUEUE, f"{c.name}|||{c.id[:12]}")
-                print(f"Started new container: {c.name}")
+                log.info(f"Started new container: {c.name}")
 
             except Exception as e:
                 print(e)
                 sys.exit(1)
 
             r.decr(config.REDIS_BOOTING_COUNTER)
+
+        # -- Remove old containers --
+        old_cont = r.lrange(config.REDIS_OLD_LIST, 0, -1)
+        log.debug("old cont %s", str(old_cont))
+        if len(old_cont) > 0:
+            for cont in old_cont:
+                if stop_container(client, cont.decode()):
+                    r.lpop(config.REDIS_OLD_LIST)
+                    log.debug("Stopped old container %s", cont.decode())
+
 
         sleep(config.CHECK_INTERVAL)
 

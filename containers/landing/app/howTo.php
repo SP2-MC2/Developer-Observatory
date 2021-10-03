@@ -161,7 +161,7 @@ if(isset($_POST["g-recaptcha-response"])){
                         $serverData = explode("|||", $serverToRunOn[1]);
                         $ec2instance = $serverData[0];
                         $instanceId = $serverData[1]; 
-                        $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid, time=NOW(), heartbeat=NOW(), condition = :condition, category = :category WHERE userid = :userid;');
+                        $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid, time=NOW(), heartbeat=NOW(), condition = :condition, category = :category, finished = False, "instanceTerminated" = False WHERE userid = :userid;');
                         $sth->bindParam(':ec2instance', $ec2instance);
                         $sth->bindParam(':userid', $token);
                         $sth->bindParam(':instanceid', $instanceId);
@@ -188,8 +188,11 @@ if(isset($_POST["g-recaptcha-response"])){
                     die();
                 }
             }catch (PDOException $e) {  
-                echo '<html><head><meta http-equiv="refresh" content="3;url=consent.php?token='.$token.'&token2='.$token2.'" /></head><body><h2>A database error occured, please try again! The error was: '.$e.'</h2><br/>Redirecting to starting page in 3 seconds.</body></html>';  
-                die();  
+                echo '<html><head>
+                    <meta http-equiv="refresh" content="5;url=consent.php?token='.$token.'&token2='.$token2.'" />
+                    </head><body><h2 style="color:red">A database error occured, please try again! 
+                    The error was: '.$e.'</h2><br/>Redirecting to starting page in 5 seconds.</body></html>';  
+                die();
             }catch (RedisException $e) { 
                 $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid WHERE userid = :userid;');
                 $errorIndicator = "error";

@@ -78,7 +78,7 @@ class CreatedInstances(db.Model):
     category = db.Column(db.Integer)
     condition = db.Column(db.Integer)
     instanceid = db.Column(db.String())
-    terminated = db.Column(db.Boolean)
+    finished = db.Column(db.Boolean)
     heartbeat = db.Column(db.DateTime, default=db.func.current_timestamp())
     instanceTerminated = db.Column(db.Boolean)
 
@@ -166,28 +166,14 @@ def redirectToSurvey(userid, token):
     if row == None:
         return 'userid ' + userid + ' does not exist!'
 
-    # TODO: Terminate Docker instances here
-    #ec2 = boto3.resource('ec2')
-    #instanceid = [row.instanceid]
-    
-	# shut down the instance
-    """
-    if row.terminated != 'true':
-        try:
-            ec2.instances.filter(InstanceIds=instanceid).terminate()
-            row.terminated = 'true'
-            db.session.commit()
-        except Exception as e:
-            print(e)
-        """
+    row.finished = True
+    db.session.commit()
 
     url = app.config["FINAL_SURVEY_URL"] + "/?uid="+userid+"&tok="+token+"&newtest=Y"
     if(not (url.startswith("http://") or url.startswith("https://"))):
         url = "https://" + url
     print(url)
     return redirect(url, code=302)
-
-    #return "Hello"
 
 
 @app.route('/submit', methods=['POST'])
@@ -202,7 +188,7 @@ def submit():
                     db.session.add(row)
                     db.session.commit()
                 elif (jsonPayload['type'] == 'code'):
-                    row = Jupyter(jsonPayload['user_id'], jsonPayload['token'], jsonPayload['code'], jsonPayload['time'], jsonPayload['status']) 
+                    row = Jupyter(jsonPayload['user_id'], jsonPayload['token'], jsonPayload['code'], jsonPayload['time'], jsonPayload['status'])
                     db.session.add(row)
                     db.session.commit()
             else:

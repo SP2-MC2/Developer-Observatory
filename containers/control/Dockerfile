@@ -1,3 +1,11 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.8
+FROM python:3.8
 
-COPY ./app /app
+WORKDIR /usr/src/app
+
+COPY ./requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["./run.sh"]

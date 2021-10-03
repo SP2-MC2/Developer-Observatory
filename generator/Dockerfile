@@ -6,4 +6,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-RUN ["python", "./notebookgen.py"]
+CMD ["python", "./notebookgen.py"]

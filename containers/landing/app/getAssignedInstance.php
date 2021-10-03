@@ -13,7 +13,7 @@ $userId = htmlspecialchars($_POST["userid"]);
 $token2 = htmlspecialchars($_POST["token2"]);
 
 if((strlen($userId) == 12 and preg_match("/^[0-9a-z]+$/", $userId)) and (strlen($token2) == 12 and preg_match("/^[0-9a-z]+$/", $token2))){
-    $sth = $connect->prepare('SELECT instanceid as instanceid, hash as hash FROM "createdInstances" LEFT JOIN "conditions" ON "createdInstances".condition = "conditions".condition WHERE userid = :userid;');
+    $sth = $connect->prepare('SELECT instanceid as instanceid, hash as hash FROM "createdInstances" LEFT JOIN "conditions" ON "createdInstances".condition = "conditions".condition WHERE userid = :userid AND NOT "instanceTerminated";');
     $sth->bindParam(':userid', $userId);
     $sth->execute();
     $results = $sth->fetch(PDO::FETCH_BOTH);
