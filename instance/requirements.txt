@@ -1,0 +1,5 @@
+jupyter
+PyCrypto==2.6.1
+cryptography==1.4
+python-keyczar==0.716
+PyNaCl==1.01

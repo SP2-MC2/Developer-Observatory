@@ -18,4 +18,5 @@ if(strlen($userId) == 12 and preg_match("/^[0-9a-z]+$/", $userId)){
     $sth->bindParam(':userid', $userId);
     $sth->bindParam(':ec2instance', $ec2instance);
     $sth->execute();
+}
 ?>

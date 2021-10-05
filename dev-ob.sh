@@ -25,6 +25,7 @@ usage() {
     echo -e "down\t\t Alias for compose down"
     echo -e "reset\t\t Completely resets the application to the inital state - ALL DATA IS DELETED"
     echo -e "compose\t\t Any commands after compose will be sent to a docker-compose with the correct arguments"
+    echo -e "docs\t\t Start a HTTP server to view documentation in doc/ directory"
 }
 
 prompt_confirm() {
@@ -189,6 +190,8 @@ elif [[ $1 == "reset" ]]; then
 elif [[ $1 == "compose" ]]; then
   shift
   runCompose $@
+elif [[ $1 == "docs" ]]; then
+  python -m http.server --directory doc/
 else
   echo -e "${RED}Unknown command: $1${NC}"
   exit 1

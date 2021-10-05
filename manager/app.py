@@ -39,7 +39,13 @@ def create_container(client, tag):
 
     net = nets[0]
 
-    cont = client.containers.run(tag, detach=True, auto_remove=True, network=net.name)
+    cont = client.containers.run(tag,
+            detach=True,
+            auto_remove=True,
+            network=net.name,
+            mem_limit="128m",
+            cpu_shares=512
+    )
     RUNNING_CONTAINERS.append(cont)
 
     return cont
@@ -137,7 +143,6 @@ if __name__ == "__main__":
 
         # -- Remove old containers --
         old_cont = r.lrange(config.REDIS_OLD_LIST, 0, -1)
-        log.debug("old cont %s", str(old_cont))
         if len(old_cont) > 0:
             for cont in old_cont:
                 if stop_container(client, cont.decode()):

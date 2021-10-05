@@ -1,4 +1,4 @@
-INSTANCE_TAG = "devob-instance"
+INSTANCE_TAG = "devob_instance"
 NETWORK_NAME = "%instancesNetwork%"
 REDIS_QUEUE = "queuedInstances"
 REDIS_BOOTING_COUNTER = "queuedInstancesBooting"
