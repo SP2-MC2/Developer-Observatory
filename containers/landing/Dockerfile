@@ -1,6 +1,6 @@
 FROM php:7-fpm
 
-WORKDIR /var/www/devob/
+WORKDIR /var/www/
 
 
 # We have to do this to install PHP extensions
@@ -18,6 +18,7 @@ RUN composer require google/recaptcha "~1.1" &&\
     composer install
 
 
+RUN mkdir /var/www/devob/
 COPY app/ /var/www/devob/
 RUN mkdir /var/www/webpageConf
 COPY webpageConf/ /var/www/webpageConf/
