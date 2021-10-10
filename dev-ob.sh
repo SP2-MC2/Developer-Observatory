@@ -101,6 +101,7 @@ build_config() {
     sed -i "s|%logLevel%|$logLevel|g" manager/manager_config.py
 
     # Postgres
+    mkdir -p containers/postgres
     cp config/Postgres.docker containers/postgres/Dockerfile
     cp config/dbSchema.sql containers/postgres/
     cp generator/generated/dbSchema.sql containers/postgres/taskSchema.sql
@@ -148,7 +149,9 @@ elif [[ $1 == "generate" ]]; then
 
   echo "Finished building task generator"
 
-  docker run --rm -p 9000:9000 --mount type=bind,src=$PWD/generator/generated,dst=/usr/src/app/generated "$dockerProjectName-generator" &
+  docker run --rm -p 9000:9000 --mount \
+	  type=bind,src=$PWD/generator/generated,dst=/usr/src/app/generated \
+	  "$dockerProjectName-generator" &
   P1=$!
   sleep 2 && echo -e "${GREEN}Task generator started. Connect your browser to port 9000 to connect.$NC" &&\
     echo "Ctrl-c to stop the generator."
@@ -191,7 +194,7 @@ elif [[ $1 == "compose" ]]; then
   shift
   runCompose $@
 elif [[ $1 == "docs" ]]; then
-  python -m http.server --directory doc/
+  python3 -m http.server --directory doc/
 else
   echo -e "${RED}Unknown command: $1${NC}"
   exit 1

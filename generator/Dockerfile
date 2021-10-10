@@ -5,5 +5,6 @@ COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 COPY . .
+RUN mkdir -p tmp
 
 CMD ["python", "./notebookgen.py"]
