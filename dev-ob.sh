@@ -42,7 +42,7 @@ prompt_confirm() {
 build_config() {
     if [[ -d "generator/generated" ]]; then
         echo "Generating configuration files and secrets"
-        cp -r generator/generated containers/submit/tasks
+        cp -r generator/generated containers/submit/tasks/
     else
         echo -ne "${RED} It seems there are no tasks generated. Please generate "
         echo -e  "tasks first before configuring. ${NC}"
@@ -153,8 +153,11 @@ elif [[ $1 == "generate" ]]; then
 
   echo "Finished building task generator"
 
-  docker run --rm -p 9000:9000 --mount \
-          type=bind,src=$PWD/generator/generated,dst=/usr/src/app/generated \
+  mkdir -p $PWD/generator/generated
+  mkdir -p $PWD/generator/tmp
+  docker run --rm -p 9000:9000 \
+          --mount type=bind,src=$PWD/generator/generated,dst=/usr/src/app/generated \
+          --mount type=bind,src=$PWD/generator/tmp,dst=/usr/src/app/tmp \
           "$dockerProjectName-generator" &
   P1=$!
   sleep 2 && echo -e "${GREEN}Task generator started. Connect your browser to port 9000 to connect.$NC" &&\

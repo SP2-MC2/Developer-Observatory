@@ -9,6 +9,10 @@ services:
       - instances
     ports:
       - "80:80"
+      - "443:443"
+    secrets:
+      - pub_cert
+      - priv_key
 
   landing-server:
     build: ./containers/landing
@@ -59,3 +63,11 @@ networks:
   instances:
     driver: bridge
     internal: true
+
+secrets:
+  pub_cert:
+    file: /etc/cert/developer-study.crt
+  priv_key:
+    file: /etc/cert/developer-study.key
+
+

@@ -12,7 +12,7 @@ logging.basicConfig(stream=sys.stdout)
 log = logging.getLogger()
 
 def sigint_handler(sig, frame):
-    print("\nInterrupt received, stopping all containers")
+    log.info("Interrupt received, stopping all containers")
     cont_names = [c.name for c in RUNNING_CONTAINERS]
 
     if len(cont_names) > 0:
@@ -56,7 +56,7 @@ def stop_container(client, cont_id):
         thread_log = logging.getLogger("thread." + str(me))
 
         try:
-            thread_log.debug(f"Thread {me} removing container {container.name}")
+            thread_log.debug(f"Removing container {container.name}")
             container.stop()
         except docker.errors.APIError as e:
             thread_log.error("API Error from thread: %s", str(e))
@@ -71,11 +71,8 @@ def stop_container(client, cont_id):
 
         RUNNING_CONTAINERS.remove(cont)
         return True
-    except docker.errors.NotFound:
-        print("Couldn't find container", cont_id, file=sys.stderr)
-        return False
     except ValueError:
-        print("Couldn't remove container", cont_id, "from running containers list", file=sys.stderr)
+        log.warn(f"Couldn't remove container {cont_id} from running containers list")
         return False
 
 
@@ -120,10 +117,18 @@ if __name__ == "__main__":
     while(True):
         # -- Add new containers if needed --
         # Ensure booting counter is not negative
-        booting = r.get(config.REDIS_BOOTING_COUNTER)
+        try:
+            booting = r.get(config.REDIS_BOOTING_COUNTER)
+        except redis.exceptions.ConnectionError:
+            log.error("Lost connection to redis, stopping script...")
+            sigint_handler(None,None)
+
+
+        # Check booting counter
         if booting == None or dint(booting) < 0:
             r.set(config.REDIS_BOOTING_COUNTER, 0)
 
+        # -- Add new containers --
         if dint(r.llen(config.REDIS_QUEUE)) + \
                 dint(r.get(config.REDIS_BOOTING_COUNTER)) < config.POOL_SIZE:
             try:
@@ -136,7 +141,7 @@ if __name__ == "__main__":
                 log.info(f"Started new container: {c.name}")
 
             except Exception as e:
-                print(e)
+                log.error(e)
                 sys.exit(1)
 
             r.decr(config.REDIS_BOOTING_COUNTER)
@@ -147,7 +152,7 @@ if __name__ == "__main__":
             for cont in old_cont:
                 if stop_container(client, cont.decode()):
                     r.lpop(config.REDIS_OLD_LIST)
-                    log.debug("Stopped old container %s", cont.decode())
+                    log.info("Stopped old container %s", cont.decode())
 
 
         sleep(config.CHECK_INTERVAL)
