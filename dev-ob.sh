@@ -110,9 +110,13 @@ build_config() {
     sed -i "s|%pwUser2%|$pwUser2|g" containers/postgres/dbSchema.sql
     sed -i "s|%pwUser3%|$pwUser3|g" containers/postgres/dbSchema.sql
 
-    cd instance/
-    . configure_instance.sh
-    cd ..
+    # Instance
+    cp instance/template/app.py instance/app.py
+    cp instance/template/custom.js instance/jupyter/
+    sed -i "s|%landingURL%|$landingURL|g" instance/app.py
+    sed -i "s|%landingURL%|$landingURL|g" instance/jupyter/custom.js
+    sed -i "s|%skippedTaskSurveyURL%|$skippedTaskSurveyURL|g" instance/jupyter/custom.js
+    sed -i "s|%taskCount%|$taskCount|g" instance/jupyter/custom.js
 }
 
 checkCompose() {
@@ -150,8 +154,8 @@ elif [[ $1 == "generate" ]]; then
   echo "Finished building task generator"
 
   docker run --rm -p 9000:9000 --mount \
-	  type=bind,src=$PWD/generator/generated,dst=/usr/src/app/generated \
-	  "$dockerProjectName-generator" &
+          type=bind,src=$PWD/generator/generated,dst=/usr/src/app/generated \
+          "$dockerProjectName-generator" &
   P1=$!
   sleep 2 && echo -e "${GREEN}Task generator started. Connect your browser to port 9000 to connect.$NC" &&\
     echo "Ctrl-c to stop the generator."
@@ -186,6 +190,8 @@ elif [[ $1 == "reset" ]]; then
   rm -f containers/submit/configSubmit.py
   rm -f containers/control/config.py
   rm -f manager/manager_config.py
+  rm -f instance/app.py
+  rm -f instance/jupyter/custom.js
 
   # Purge db volume
   docker volume rm devob-data
