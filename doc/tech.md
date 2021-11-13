@@ -6,7 +6,7 @@ For a typical study, a participant will first see introductory information and a
 The application is docker-based, with multiple containers hosting the study backend, and a variable amount of containers hosting the study instances.
 
 Below is an architectural overview
-![Architectural overview](img/architecture.md)
+![Architectural overview](img/architecture.png)
 
 ## Manager
 The Docker manager is a python script that interfaces with the host's docker daemon to create and destroy study instances as needed. Currently the manager:
