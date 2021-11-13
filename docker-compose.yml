@@ -34,7 +34,7 @@ services:
     networks:
       - main
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
   control:
     build: ./containers/control
@@ -43,8 +43,6 @@ services:
       - redis
     networks:
       - main
-    ports:
-      - "8080:80"
 
   submit:
     build: ./containers/submit

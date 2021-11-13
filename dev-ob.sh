@@ -203,7 +203,7 @@ elif [[ $1 == "compose" ]]; then
   shift
   runCompose $@
 elif [[ $1 == "docs" ]]; then
-  python3 -m http.server --directory doc/
+  python3 -m http.server --directory doc/html
 else
   echo -e "${RED}Unknown command: $1${NC}"
   exit 1
