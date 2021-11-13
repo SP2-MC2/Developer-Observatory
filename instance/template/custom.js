@@ -221,8 +221,8 @@ define([
                 taskProgress2.html(getCurrentTaskNumber());
                 if (save_timeout != 0) {
                     IPython.notebook.save_notebook();
-                    var saved = setinterval(function() {
-                        if (!ipython.notebook.dirty) {
+                    var saved = setInterval(function() {
+                        if (!IPython.notebook.dirty) {
                             clearinterval(saved);
                             submitcode(userid, ipython.notebook.tojson(), action_type, token);
                         }
@@ -270,7 +270,6 @@ define([
                 // Measure time
                 timeExecMeasure(tasknum);
                 // Execute the current cell
-                IPython.notebook.save_notebook();
                 IPython.notebook.execute_selected_cells();
 
                 // Uncomment to record everytime the user runs code

@@ -112,6 +112,10 @@ if __name__ == "__main__":
 
     # Setup redis
     r = redis.Redis(host="localhost", port=6379, db=0)
+    # Reset various redis keys
+    r.delete(config.REDIS_QUEUE)
+    r.delete(config.REDIS_BOOTING_COUNTER)
+    r.delete(config.REDIS_OLD_LIST)
 
     log.info("Monitoring redis for events, press Ctrl-C to stop...")
     while(True):
