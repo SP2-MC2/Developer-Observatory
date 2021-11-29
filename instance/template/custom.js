@@ -123,9 +123,7 @@ function hideTasks(){
     if (currentTask == getTaskCountInNotebook()){
         $(".btn-task").hide();
         $("#next_btn").show();
-        $("#next_btn").text("I am done!");
-        $("#reset_btn").show();
-        $(".execBtn").show();
+        $("#next_btn").text("Exit study");
     }
 }
 
@@ -223,8 +221,8 @@ define([
                     IPython.notebook.save_notebook();
                     var saved = setInterval(function() {
                         if (!IPython.notebook.dirty) {
-                            clearinterval(saved);
-                            submitcode(userid, ipython.notebook.tojson(), action_type, token);
+                            clearInterval(saved);
+                            submitCode(userId, IPython.notebook.toJSON(), action_type, token);
                         }
                     }, 500);
                 } else {

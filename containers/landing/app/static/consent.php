@@ -132,11 +132,10 @@
   });
 
   function onReCaptcha(resp) {
-    console.log(`Got recptcha ${resp}`);
     $("#consent_form")[0].submit();
   }
 
-  $("#form input:checkbox").change(() => {
+  $("#consent_form input:checkbox").change(() => {
     let age_yes = $('input:checkbox[name=age_yes]:checked').val();
     let read_yes = $('input:checkbox[name=read_yes]:checked').val();
     let lang_yes = $('input:checkbox[name=lang_yes]:checked').val();
@@ -147,6 +146,9 @@
       $('#submit-btn').prop('disabled', true);
     }
   });
+
+  // Set button to disabled initially
+  $("#submit-btn").prop("disabled", true);
 </script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </html>

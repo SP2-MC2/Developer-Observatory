@@ -6,10 +6,10 @@
 from flask import Flask, redirect, request, make_response, jsonify
 from shutil import copyfile, chown
 import json
-import requests
 import os.path
 import uuid
 import urllib
+import ssl
 
 app = Flask(__name__)
 
@@ -24,17 +24,17 @@ DB_URL = "{:s}/submit".format(DB_HOST)
 def sendData(data):
     import urllib3
     from urllib3.util import Timeout
-    
+
     #Ensure we have the correct data for this user
     try:
-        with open(user_data_file) as data_file:    
+        with open(user_data_file) as data_file:
             user_data = json.load(data_file)
             data["user_id"] = user_data["user_id"]
             data["token"] = user_data["token"]
     except Exception:
         pass
 
-    https = urllib3.PoolManager()
+    https = urllib3.PoolManager(cert_reqs="CERT_NONE")
     dataRaw = {}
     dataRaw['auth-token'] = "q9c(,}=C{mQD~)2#&t3!`fLQ3zk`9," # our client authentication, should be switched to a dynamic token
     dataRaw['json-payload'] = json.dumps(data)
@@ -45,26 +45,29 @@ def sendData(data):
 @app.route('/')
 def init():
     print(request.args)
-    user_id = request.args.get('userId') 
+    user_id = request.args.get('userId')
     token = request.args.get('token')
     user_data = {}
     user_data["user_id"] = user_id
     user_data["token"] = token
-    
-    #Check if a task file already exists on this instance
+
+    # Check if a task file already exists on this instance
     if not os.path.isfile(target_file):
-        #If not, then request data for this user from the landing page
-        task_file = urllib.request.URLopener()
-        task_file.retrieve(remote_task_file+user_id+"/"+token, target_file)
+        # If not, then request data for this user from the landing page
+        request_url = "{}{}/{}".format(remote_task_file, user_id, token)
+        # Right now we don't do cert validation since were requesting
+        # https://nginx/. Fix this in the future?
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)  # Will not do cert validation
+        task_file = urllib.request.urlopen(request_url, context=ctx)
+        dest_file = open(target_file, "wb")
+        dest_file.write(task_file.read())
         chown(target_file, user="jupyter", group="jupyter")
 
-
-        
     #Prepare the response to the client -> Redirect + set cookies for uid and token
     response = make_response(redirect('nb/notebooks/tasks.ipynb'))
     response.set_cookie('userId', user_id)
     response.set_cookie('token', token)
-    
+
     # Check if we already stored user data on this instance
     if not os.path.isfile(user_data_file):
         with open(user_data_file, "w") as f:
@@ -79,7 +82,7 @@ def forward_to_survey():
     User has finished, now redirect to the exit survey.
     '''
     try:
-        with open(user_data_file) as data_file:    
+        with open(user_data_file) as data_file:
             user_data = json.load(data_file)
             user_id = user_data["user_id"]
             token = user_data["token"]
