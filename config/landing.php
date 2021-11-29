@@ -11,8 +11,8 @@ $maxInstances = %maxInstances%;
 
 // Register API keys at https://www.google.com/recaptcha/admin
 // These are currently test keys that will pass any verifications.
-$siteKey = '%recaptchaSiteKey%';
-$secret = '%recaptchaSecret%';
+$reCaptchaSiteKey = '%recaptchaSiteKey%';
+$reCaptchaSecret = '%recaptchaSecret%';
 
 // AWS Credentials
 $lang = '%awsLang%';

@@ -11,6 +11,7 @@ require_once('util.php');
 
 $token = htmlspecialchars($_GET['token']);
 $token2 = htmlspecialchars($_GET['token2']);
+$remoteIp = get_ip();
 
 if(!checkToken($token, $token2)) {
     $webpageMessageHeader = "No token found";
@@ -20,58 +21,67 @@ if(!checkToken($token, $token2)) {
     die();
 }
 
-if(!($_POST["age_yes"] == "on" AND $_POST["read_yes"] == "on" AND $_POST["lang_yes"] == "on" AND $_POST["cont_yes"] == "on")){
-    $webpageMessageHeader = "Please accept all conditions!";
-    $webpageMessage = "You have to accept all conditions to continue this study.<br />Redirecting to starting page in 5 seconds.";
-    $webpageRedirect = True;
-    $webpageRedirectTime = 5;
-    $webpageRedirectUrl = "consent.php";
-    //include(__DIR__."/static/error.php");
+// Validate captcha function, returns true or false
+function validateCaptcha() {
+    global $reCaptchaSecret, $remoteIp;
+
+    if (isset($_POST["g-recaptcha-response"])) {
+        $recaptcha = new \ReCaptcha\ReCaptcha($reCaptchaSecret);
+        $resp = $recaptcha->verify($_POST["g-recaptcha-response"], $remoteIp);
+        return $resp->isSuccess();
+    } else {
+        return false;
+    }
+}
+
+if (!validateCaptcha()) {
+    // No captcha information in header or validation failed. Will not redirect anywhere.
+    $webpageMessageHeader = "reCaptcha validation failed!";
+    $webpageMessage = "No reCaptcha information found in your request or
+validation failed. You cannot continue to the study. Please contact the
+administrators if this problem persists. Redirecting to the consent form in 5
+seconds.";
+    $webpageRedirect = False;
+    include(__DIR__."/static/error.php");
     die();
 }
 
-if(isset($_POST["g-recaptcha-response"])){
-    // Verify entered captcha is valid
-    $recaptcha = new \ReCaptcha\ReCaptcha($secret);
-    $remoteIp = get_ip();
-    $resp = $recaptcha->verify($_POST["g-recaptcha-response"], $remoteIp);
+try{
+    // Connect to database
+    $connect = new PDO("pgsql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass);
+    $connect->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $redisConn = new Redis();
+    $redisConn->connect($redisIp);
 
-    try{
-        // Connect to database
-        $connect = new PDO("pgsql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass);
-        $connect->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $redisConn = new Redis();
-        $redisConn->connect($redisIp);
-
-        // Add consent form to databse
-        $sth = $connect->prepare('INSERT INTO "consent" (userid, token, accepted) VALUES (:userid, :token, true)');
-        $sth->bindParam(':userid', $token);
-        $sth->bindParam(':token', $token2);
-        $sth->execute();
+    // Add consent form to databse
+    $sth = $connect->prepare('INSERT INTO "consent" (userid, token, accepted) VALUES (:userid, :token, true)');
+    $sth->bindParam(':userid', $token);
+    $sth->bindParam(':token', $token2);
+    $sth->execute();
 
 
-        //Check if hard limit is reached:
-        $sth = $connect->prepare('SELECT COUNT(*) as count FROM "createdInstances";');
-        $sth->execute();
+    //Check if hard limit is reached:
+    $sth = $connect->prepare('SELECT COUNT(*) as count FROM "createdInstances";');
+    $sth->execute();
 
-        $results = $sth->fetch(PDO::FETCH_ASSOC);
-        if($results['count'] > $maxInstances){
-            $webpageMessageHeader = "Study is over";
-            $webpageMessage = "Thank you for your interest! We have already received the maximum number of participants for this study.";
-            $webpageRedirect = False;
-            include(__DIR__."/static/error.php");
-            die();
-        }
+    $results = $sth->fetch(PDO::FETCH_ASSOC);
+    if($results['count'] > $maxInstances){
+        $webpageMessageHeader = "Study is over";
+        $webpageMessage = "Thank you for your interest! We have already received the maximum number of participants for this study.";
+        $webpageRedirect = False;
+        include(__DIR__."/static/error.php");
+        die();
+    }
 
-        // Check if daily limit is reached
-        $sth = $connect->prepare('SELECT COUNT(*) as count FROM "createdInstances" WHERE ip = :ip AND time >= NOW() - \'1 day\'::INTERVAL');
-        $sth->bindParam(':ip', $remoteIp);
-        $sth->execute();
-        $results = $sth->fetch(PDO::FETCH_ASSOC);
-        //error_log($results['count']." instances started by ".$remoteIp, 0);
-        if($results['count'] < $dailyMaxInstances){
-            // Generate User ID
-            $uniqid = $token;//uniqid('', true);
+    // Check if daily limit is reached
+    $sth = $connect->prepare('SELECT COUNT(*) as count FROM "createdInstances" WHERE ip = :ip AND time >= NOW() - \'1 day\'::INTERVAL');
+    $sth->bindParam(':ip', $remoteIp);
+    $sth->execute();
+    $results = $sth->fetch(PDO::FETCH_ASSOC);
+    //error_log($results['count']." instances started by ".$remoteIp, 0);
+    if($results['count'] < $dailyMaxInstances){
+        // Generate User ID
+        $uniqid = $token;//uniqid('', true);
 
             /*$rare = array(2,4,6,8,3,5,7,9);
             $common = array(0,10,13,16,19,22,1,11,14,17,20,23,12,15,18,21,24);
@@ -89,99 +99,97 @@ if(isset($_POST["g-recaptcha-response"])){
                 $commonRun = $redisConn->incr($redisCommonRunCounter);
                 $resultsCond = $common[$commonRun % count($common)];
             }
-            
+
             $sth = $connect->prepare('SELECT category FROM conditions WHERE condition = :cond;');
             $sth->bindParam(':cond', $resultsCond);
             $sth->execute();
             $resultsCat = $sth->fetch(PDO::FETCH_ASSOC); */
-            
-            $sth = $connect->prepare('SELECT category, categorycount FROM (SELECT c.category as category, COUNT(ci.category) as categorycount FROM conditions c LEFT JOIN "createdInstances" ci ON c.condition = ci.condition GROUP BY c.category ORDER BY c.category) AS c ORDER BY categorycount ASC LIMIT 1;');
-            $sth->execute();        
-            $resultsCat = $sth->fetch(PDO::FETCH_ASSOC);
-            
-            $sth = $connect->prepare('SELECT cond, condcount FROM (SELECT c.condition as cond, COUNT(ci.condition) as condcount FROM conditions c LEFT JOIN "createdInstances" ci ON c.condition = ci.condition WHERE c.category = :category GROUP BY c.condition ORDER BY RANDOM()) AS f ORDER BY condcount ASC LIMIT 1;');
-            $sth->bindParam(':category', $resultsCat['category']);
-            $sth->execute();        
-            $results = $sth->fetch(PDO::FETCH_ASSOC);
-            
-            $sth = $connect->prepare('SELECT userid FROM "createdInstances" ci WHERE userid = :userid;');
-            $sth->bindParam(':userid', $token);
-            $sth->execute();        
-            $resultsUserID = $sth->fetch(PDO::FETCH_ASSOC);
-            if($resultsUserID['userid'] != $token){
-                // If token not in DB yet, then add it, otherwise skip it
-                $sth = $connect->prepare('INSERT INTO "createdInstances" (ip, time, userid, condition, category) VALUES (:ip, NOW(), :userid, :condition, :category);');
-                $sth->bindParam(':ip', $remoteIp);
-                $sth->bindParam(':userid', $token);
-                $sth->bindParam(':condition', $results['cond']);
-                // $sth->bindParam(':condition', $resultsCond);
-                $sth->bindParam(':category', $resultsCat['category']);
-                $sth->execute();
-            }
-                            
-            include("static/howTo.php");
-            ob_flush();flush();
-            
 
-            $serverToRunOn = $redisConn->blPop($redisQueue, $waitTimeoutForInstance);
-            
-            if ($serverToRunOn == False){
-                // Our redis hasn't delivered a server even after waiting for $waitTimeoutForInstance seconds
-                $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid WHERE userid = :userid;');
-                $errorIndicator = "error";
-                $sth->bindParam(':ec2instance', $errorIndicator);
-                $sth->bindParam(':userid', $token);
-                $sth->bindParam(':instanceid', $errorIndicator);
-                $sth->execute();
-            } else {
-                $serverData = explode("|||", $serverToRunOn[1]);
-                $ec2instance = $serverData[0];
-                $instanceId = $serverData[1]; 
-                $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid, time=NOW(), heartbeat=NOW(), condition = :condition, category = :category, finished = False, "instanceTerminated" = False WHERE userid = :userid;');
-                $sth->bindParam(':ec2instance', $ec2instance);
-                $sth->bindParam(':userid', $token);
-                $sth->bindParam(':instanceid', $instanceId);
-                $sth->bindParam(':condition', $results['cond']);
-                // $sth->bindParam(':condition', $resultsCond);
-                $sth->bindParam(':category', $resultsCat['category']);
-                $sth->execute();
-                
-                // Invalidate token
-                $curl = curl_init();
-                curl_setopt_array($curl, array(
-                    CURLOPT_RETURNTRANSFER => 1,
-                    CURLOPT_URL => $tokenSetUrl.$token.'/'.$token2,
-                    CURLOPT_USERAGENT => 'LandingPage Token Verifier'
-                ));
-                $respToken = curl_exec($curl);
-                
-            }
-        } else {
-            $webpageMessageHeader = "Error:";
-            $webpageMessage = "You have already started to many instances, please try again in 24 hours.";
-            $webpageRedirect = False;
-            include(__DIR__."/static/error.php");
-            die();
-        }
-    } catch (PDOException $e) {  
-        echo '<html><head>
-            <meta http-equiv="refresh" content="5;url=consent.php?token='.$token.'&token2='.$token2.'" />
-            </head><body><h2 style="color:red">A database error occured, please try again! 
-            The error was: '.$e.'</h2><br/>Redirecting to starting page in 5 seconds.</body></html>';  
-        die();
-    } catch (RedisException $e) { 
-        $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid WHERE userid = :userid;');
-        $errorIndicator = "error";
-        echo $e;
-        $sth->bindParam(':ec2instance', $errorIndicator);
-        $sth->bindParam(':userid', $token);
-        $sth->bindParam(':instanceid', $errorIndicator);
+        $sth = $connect->prepare('SELECT category, categorycount FROM (SELECT c.category as category, COUNT(ci.category) as categorycount FROM conditions c LEFT JOIN "createdInstances" ci ON c.condition = ci.condition GROUP BY c.category ORDER BY c.category) AS c ORDER BY categorycount ASC LIMIT 1;');
         $sth->execute();
+        $resultsCat = $sth->fetch(PDO::FETCH_ASSOC);
+
+        $sth = $connect->prepare('SELECT cond, condcount FROM (SELECT c.condition as cond, COUNT(ci.condition) as condcount FROM conditions c LEFT JOIN "createdInstances" ci ON c.condition = ci.condition WHERE c.category = :category GROUP BY c.condition ORDER BY RANDOM()) AS f ORDER BY condcount ASC LIMIT 1;');
+        $sth->bindParam(':category', $resultsCat['category']);
+        $sth->execute();
+        $results = $sth->fetch(PDO::FETCH_ASSOC);
+
+        $sth = $connect->prepare('SELECT userid FROM "createdInstances" ci WHERE userid = :userid;');
+        $sth->bindParam(':userid', $token);
+        $sth->execute();
+        $resultsUserID = $sth->fetch(PDO::FETCH_ASSOC);
+        if($resultsUserID['userid'] != $token){
+            // If token not in DB yet, then add it, otherwise skip it
+            $sth = $connect->prepare('INSERT INTO "createdInstances" (ip, time, userid, condition, category) VALUES (:ip, NOW(), :userid, :condition, :category);');
+            $sth->bindParam(':ip', $remoteIp);
+            $sth->bindParam(':userid', $token);
+            $sth->bindParam(':condition', $results['cond']);
+            // $sth->bindParam(':condition', $resultsCond);
+            $sth->bindParam(':category', $resultsCat['category']);
+            $sth->execute();
+        }
+
+        include("static/howTo.php");
+        ob_flush();flush();
+
+
+        $serverToRunOn = $redisConn->blPop($redisQueue, $waitTimeoutForInstance);
+
+        if ($serverToRunOn == False){
+            // Our redis hasn't delivered a server even after waiting for $waitTimeoutForInstance seconds
+            $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid WHERE userid = :userid;');
+            $errorIndicator = "error";
+            $sth->bindParam(':ec2instance', $errorIndicator);
+            $sth->bindParam(':userid', $token);
+            $sth->bindParam(':instanceid', $errorIndicator);
+            $sth->execute();
+        } else {
+            $serverData = explode("|||", $serverToRunOn[1]);
+            $ec2instance = $serverData[0];
+            $instanceId = $serverData[1];
+            $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid, time=NOW(), heartbeat=NOW(), condition = :condition, category = :category, finished = False, "instanceTerminated" = False WHERE userid = :userid;');
+            $sth->bindParam(':ec2instance', $ec2instance);
+            $sth->bindParam(':userid', $token);
+            $sth->bindParam(':instanceid', $instanceId);
+            $sth->bindParam(':condition', $results['cond']);
+            // $sth->bindParam(':condition', $resultsCond);
+            $sth->bindParam(':category', $resultsCat['category']);
+            $sth->execute();
+
+            // Invalidate token
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_RETURNTRANSFER => 1,
+                CURLOPT_URL => $tokenSetUrl.$token.'/'.$token2,
+                CURLOPT_USERAGENT => 'LandingPage Token Verifier'
+            ));
+            $respToken = curl_exec($curl);
+
+        }
+    } else {
+        $webpageMessageHeader = "Error:";
+        $webpageMessage = "You have already started to many instances, please try again in 24 hours.";
+        $webpageRedirect = False;
+        include(__DIR__."/static/error.php");
         die();
     }
-} else {
-    // No Captcha entered, redirect to landing
-    header("Location: consent.php");
+} catch (PDOException $e) {
+    $webpageMessageHeader = "Database error";
+    //$webpageMessage = "A database error occured, please try again!";
+    $webpageMessage = $e;
+    $webpageRedirect = False;
+    //$webpageRedirect = True;
+    //$webpageRedirectUrl = "consent.php?token={$token}&token2={$token2}";
+    include(__DIR__."/static/error.php");
+    die();
+} catch (RedisException $e) {
+    $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid WHERE userid = :userid;');
+    $errorIndicator = "error";
+    echo $e;
+    $sth->bindParam(':ec2instance', $errorIndicator);
+    $sth->bindParam(':userid', $token);
+    $sth->bindParam(':instanceid', $errorIndicator);
+    $sth->execute();
+    die();
 }
-
 ?>

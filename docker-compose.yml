@@ -21,7 +21,7 @@ services:
       - redis
     networks:
       - main
-  
+
   db:
     build: ./containers/postgres
     networks:

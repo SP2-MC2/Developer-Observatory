@@ -49,6 +49,14 @@ build_config() {
         exit 1
     fi
 
+    # Generate a logLevel variable based on the appMode. Used for python
+    # logging modules.
+    if [[ $appMode == "DEBUG" ]]; then
+      logLevel="DEBUG"
+    else
+      logLevel="WARNING"
+    fi
+
     # Configuring secrets, since this has persistence
     if [[ ! -f config/.secrets ]]; then
         #Generate Passwords for the database in the first run. Replace in the files directly
@@ -114,6 +122,7 @@ build_config() {
     cp instance/template/app.py instance/app.py
     cp instance/template/custom.js instance/jupyter/
     sed -i "s|%landingURL%|$landingURL|g" instance/app.py
+    sed -i "s|%appMode%|$appMode|g" instance/app.py
     sed -i "s|%landingURL%|$landingURL|g" instance/jupyter/custom.js
     sed -i "s|%skippedTaskSurveyURL%|$skippedTaskSurveyURL|g" instance/jupyter/custom.js
     sed -i "s|%taskCount%|$taskCount|g" instance/jupyter/custom.js
@@ -174,7 +183,7 @@ elif [[ $1 == "run" ]]; then
 elif [[ $1 == "down" ]]; then
   runCompose down
 elif [[ $1 == "reset" ]]; then
-  echo -e "${RED} WARNING: THIS WILL CLEAR ALL OF YOUR DATA, INCLUDING STUDY RESULTS${NC}"
+  echo -e "${RED}WARNING: THIS WILL CLEAR ALL OF YOUR DATA, INCLUDING STUDY RESULTS${NC}"
   prompt_confirm "Reset this developer observatory to its initial state" || exit 0
 
   # Bring compose down

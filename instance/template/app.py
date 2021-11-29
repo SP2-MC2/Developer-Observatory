@@ -16,6 +16,7 @@ app = Flask(__name__)
 remote_task_file = "%landingURL%/get_ipynb/"
 target_file = "/home/jupyter/tasks.ipynb"
 user_data_file = "/home/jupyter/.instanceinfo"
+app_mode = "%appMode%"
 
 DB_HOST = "%landingURL%"
 DB_URL = "{:s}/submit".format(DB_HOST)
@@ -110,5 +111,4 @@ def not_found(error):
 
 
 if __name__ == '__main__':
-    #app.debug = True
-    app.run(host='0.0.0.0', port=60000)
+    app.run(host='0.0.0.0', port=60000, debug=app_mode == "DEBUG")

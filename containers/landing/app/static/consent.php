@@ -93,7 +93,7 @@
     </div>
 </div>
 
-<form id="form" name="form" role="form" method="post" action="howTo.php?token=<?php echo $token;?>&token2=<?php echo $token2; echo $originParam;?>">
+<form id="consent_form" name="form" role="form" method="post" action="howTo.php?token=<?php echo $token;?>&token2=<?php echo $token2; echo $originParam;?>">
   <hr>
   <div class="form-group">
     <div class="checkbox">
@@ -109,11 +109,16 @@
         <label><input type="checkbox" name="cont_yes" id="cont_yes"> <b>I agree to participate in this research and I want to continue with the study.</b></label>
     </div>
   </div>
-  <div class="form-group">
-    <label><b>Please prove that you are a human:</b></label>
-    <div class="grecaptcha" id="grecaptcha"></div>
-  </div>
-<button type="submit" class="btn btn-default" id="submit-btn">Submit</button>
+  <div id="recaptcha" class="g-recaptcha"
+    data-sitekey="<?php echo $reCaptchaSiteKey; ?>"
+    data-size="invisible"
+    data-callback="onReCaptcha"
+  ></div>
+  <button
+    type="submit"
+    class="btn btn-default"
+    id="submit-btn"
+  >Submit</button>
 </form>
 
 <hr class="featurette-divider">
@@ -121,42 +126,27 @@
 <?php include('template/bodyend.html') ?>
 
 <script type="text/javascript">
+  $("#consent_form").submit((e) => {
+    grecaptcha.execute();
+    e.preventDefault();
+  });
 
-    var RC2KEY = '<?php echo $siteKey; ?>',
-    doSubmit = false;
+  function onReCaptcha(resp) {
+    console.log(`Got recptcha ${resp}`);
+    $("#consent_form")[0].submit();
+  }
 
-    function reCaptchaVerify(response) {
-        if (response === document.querySelector('.g-recaptcha-response').value) {
-            $('#submit-btn').prop('disabled', false);
-        }
+  $("#form input:checkbox").change(() => {
+    let age_yes = $('input:checkbox[name=age_yes]:checked').val();
+    let read_yes = $('input:checkbox[name=read_yes]:checked').val();
+    let lang_yes = $('input:checkbox[name=lang_yes]:checked').val();
+    let cont_yes = $('input:checkbox[name=cont_yes]:checked').val();
+    if(age_yes == "on" && read_yes == "on" && lang_yes == "on" && cont_yes == "on"){
+      $('#submit-btn').prop('disabled', false);
+    } else {
+      $('#submit-btn').prop('disabled', true);
     }
-
-    function reCaptchaExpired () {
-        /* do something when it expires */
-    }
-
-    function reCaptchaCallback () {
-        grecaptcha.render('grecaptcha', {
-            'sitekey': RC2KEY,
-            'callback': reCaptchaVerify,
-            'expired-callback': reCaptchaExpired
-        });
-    }
-
-    $('#submit-btn').prop('disabled', true);
-    $("form input:checkbox").change(function () {
-        $age_yes = $('input:checkbox[name=age_yes]:checked').val();
-        $read_yes = $('input:checkbox[name=read_yes]:checked').val();
-        $lang_yes = $('input:checkbox[name=lang_yes]:checked').val();
-        $cont_yes = $('input:checkbox[name=cont_yes]:checked').val();
-        if($age_yes == "on" && $read_yes == "on" && $lang_yes == "on" && $cont_yes == "on"){
-            $('#submit-btn').prop('disabled', false);
-        } else {
-            $('#submit-btn').prop('disabled', true);
-        }
-    });
+  });
 </script>
-<script src="https://www.google.com/recaptcha/api.js?onload=reCaptchaCallback&render=explicit" async defer></script>
-
-
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </html>

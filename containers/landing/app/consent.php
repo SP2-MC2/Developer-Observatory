@@ -6,7 +6,7 @@
 
 define('__DIR__', dirname(__FILE__));
 require_once(__DIR__."/../webpageConf/config.php");
-require("util.php");
+require_once("util.php");
 
 if(studyLimitReached()) {
     $webpageMessageHeader = "Study is over";
@@ -21,5 +21,5 @@ $token = generateAlphanumeric(12);
 $token2 = generateAlphanumeric(12);
 
 
-include("static/consent.php");
+require("static/consent.php");
 ?>

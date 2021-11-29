@@ -3,8 +3,10 @@
 
 ## GENERAL OPTIONS ##
 
-# Logging level for the entire application, gets propagated to various containers
-logLevel="DEBUG"
+# Logging level for the entire application, gets propagated to various
+# containers Application mode, should be set to eiher "DEBUG" or "PROD". Debug
+# will enable extra logging and error messages
+appMode="DEBUG"
 
 ## LANDING SERVER CONFIGURATION ##
 
