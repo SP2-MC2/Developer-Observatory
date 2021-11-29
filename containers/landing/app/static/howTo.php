@@ -38,7 +38,8 @@
         <div class="row">
             <div class="col-lg-6" style="text-align: justify;">
                 <p><h2>About the online editor</h2>
-For this study, you will be writing your code using a Python online editor. The editor is based on a Jupyter notebook an interactive, web-based platform that allows you to write and execute Python code directly in your browser. Please note that we use Python version 2.7.11 for this study.<br />
+For this study, you will be writing your code using a Python online editor. The editor is based on Jupyter notebook, an interactive, web-based platform that allows you to write and execute Python code directly in your browser. Please note that we use Python version 2.7.12 for this study.<br />
+
 We have included all third party libraries that we think you might require to complete all programming tasks. 
 A list of pre-installed libraries is available in the editor.</p>
 
@@ -52,9 +53,13 @@ Push the green button labeled “Run and test your code” to run your code. Pos
 When you are satisfied with your solution, push the blue button labeled “Solved, Next Task.” The next task will appear below the task you have just finished. When you have completed the final task, the blue button will read “I am done!” Pushing this button will redirect you to our exit survey, which should take less than 15 minutes to complete. Once you choose “I am done!”, you cannot return to edit your code any further.</p>
 
 <p><h2>If you get stuck</h2>
-If you find that for any reason you are unable to complete a particular task, please push the red button labeled “NOT solved, Next Task,” which will let you tell us why you couldn’t finish the task, then continue with the next task. We appreciate your effort!<br />
+If you find that for any reason you are unable to complete a particular task, please push the red button labeled “NOT solved, Next Task." We appreciate your effort!<br />
 
-If you think that the notebook got stuck, please click the yellow button labeled “Get unstuck.”<br />
+If for any reason you need to clear the variables in your notebook's current running kernel, click the yellow "Restart kernel" button.</p>
+
+<p><h2>Leaving the study</h2>
+You can stop and return to the study at any point, your progress is automatically saved. To return to the study, click on the original link given to you by the study administrators. We use cookies to track your progress, so please ensure they are enabled for a fully functional study interface.</p>
+
 
 <p>Please wait while we start your editor, this will only take a couple of seconds. You can start as soon as the button shows “Let me start the study.”</p>
             </div>
@@ -84,7 +89,7 @@ If you think that the notebook got stuck, please click the yellow button labeled
         function(data, status){
             if(data != 'error'){
                 if(data.length > 5){
-                    $('#loadingButton').html("Let me start the study");
+                    $('#loadingButton').html("Start study");
                     $('#loadingButton').removeClass("btn-warning");
                     $('#loadingButton').addClass("btn-success");
                     $('#loadingButton').click(function() {

@@ -19,13 +19,33 @@ if(studyLimitReached()){
 
 $useragent=$_SERVER['HTTP_USER_AGENT'];
 if (checkMobile($useragent)) {
-    $webpageMessageHeader = "";
+    $webpageMessageHeader = "Mobile devices not supported";
     $webpageMessage = "Thank you for your interest in our study! Sadly this webpage doesn't work with mobile browsers, please return with a desktop PC.";
     $webpageRedirect = False;
     include(__DIR__."/static/error.php");
     die();
 }
 
-// TODO: Check to see if token is in cookies for redirection to study
+if (isset($_COOKIE["token"]) && isset($_COOKIE["userId"])) {
+    $userId = $_COOKIE["userId"];
+    $token = $_COOKIE["token"];
+
+    // Connect to database
+    $connect = new PDO("pgsql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass);
+    $connect->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Check if user's instance is still in the database
+    $sth = $connect->prepare('SELECT instanceid as instanceid FROM "createdInstances" WHERE userid = :userid AND NOT "instanceTerminated" AND NOT finished;');
+    $sth->bindParam(':userid', $userId);
+    $sth->execute();
+    $results = $sth->fetch(PDO::FETCH_BOTH);
+    $instance = $results["instanceid"];
+
+    if(strlen($instance) > 0) {
+        // Redirect to active study instance
+        header("Location: /proxy/$instance/?userId=$userId&token=$token");
+        die();
+    }
+}
+
 include("static/intro.php");
 ?>

@@ -1,7 +1,25 @@
-//! Copyright (C) 2017 Christian Stransky
-//!
-//! This software may be modified and distributed under the terms
-//! of the MIT license.  See the LICENSE file for details.
+/*
+ * Copyright (C) 2017 Christian Stransky
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
+/*
+ * Task numbering scheme:
+ * This is a convoluted topic in this code that deserves some documentation.
+ * This code assumes that every task has two cells, one markdown and one code.
+ * Every notebook also has a standalone introduction  and conclusion markdown
+ * cell that will not have any run or execute buttons. Every cell is assigned
+ * an id sequentially in the format of cell{id} where id starts at 1 and is
+ * incremented for every cell. After cell ids are assigned, every two cells
+ * (except first and last) are given the same class in the format of task{id}
+ * where id starts at 0. The task classes are what is used to show and hide
+ * tasks as the user advances through the notebook.
+ *
+ * Lastly, there is one more numbering scheme to mention, which is the cell
+ * indices used by Jupyter internally. These are indexed at 0 and are
+ * incremented the same way as cell ids.
+ */
 
 // ---------
 // Constants
@@ -58,11 +76,11 @@ function heartbeatQuery() {
 
 
 function scrollToCurrentTask(){
-    id = 1 + (getCurrentTaskNumber() * 2);
+    let id = 1 + (getCurrentTaskNumber() * 2);
     // Scroll
     let elm = $("#cell"+id);
     if (elm.offset() != undefined) {
-        window.scrollTo(0, $("#cell"+id).offset().top);
+        elm[0].scrollIntoView();
     }
 }
 
@@ -177,151 +195,161 @@ define([
     'base/js/namespace',
     'base/js/promises'
 ], function(Jupyter, promises) {
-    promises.app_initialized.then(function(appname) {
-        if (appname === 'NotebookApp') {
-            // ---------
-            // App setup
-            // ---------
+    promises.notebook_loaded.then(function() {
+        // ---------
+        // App setup
+        // ---------
 
-            // Add heartbeat callback
-            setTimeout(heartbeatQuery, 1000);
+        // Add heartbeat callback
+        setTimeout(heartbeatQuery, 1000);
 
-            // Remove interface elements
-            $('div#tab_content').hide();
-            $('div#menubar-container').hide();
-
-
-            // Setup variables
-            var userId = document.cookie.replace(/(?:(?:^|.*;\s*)userId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-            var token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-
-            // Task Progress
-            var taskProgress1 = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress1')
-                                            .attr('style', 'color: red; font-weight: bold').html(' Current Task Progress: ');
-            var taskProgress2 = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress2')
-                                            .attr('style', 'color: red; font-weight: bold').html(getCurrentTaskNumber());
-            var taskProgress3 = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress3')
-                                            .attr('style', 'color: red; font-weight: bold').html(' out of ' + getTaskCountInNotebook());
-
-            $('#save_widget').append(taskProgress1);
-            $('#save_widget').append(taskProgress2);
-            $('#save_widget').append(taskProgress3);
-
-            // ------------------------
-            // Custom interface buttons
-            // ------------------------
-
-            function nextTask(action_type, save_timeout=0) {
-                setCurrentTaskNumber(getCurrentTaskNumber()+1);
-                console.info(`Advancing to task ${getCurrentTaskNumber()}`);
-                scrollToCurrentTask();
-                hideTasks();
-                taskProgress2.html(getCurrentTaskNumber());
-                if (save_timeout != 0) {
-                    IPython.notebook.save_notebook();
-                    var saved = setInterval(function() {
-                        if (!IPython.notebook.dirty) {
-                            clearInterval(saved);
-                            submitCode(userId, IPython.notebook.toJSON(), action_type, token);
-                        }
-                    }, 500);
-                } else {
-                    submitCode(userId, IPython.notebook.toJSON(), action_type, token);
-                }
-
-            }
-
-            // Ok, got it button, shown on the first cell of the task file for insructions
-            var startBtn = $('<button/>').text('Ok, got it!').click(function() { nextTask(action_types.got_it) });
-            startBtn.attr('id', 'start_btn').attr('class', 'btn btn-primary btn-start');
-            startBtn.attr('style', 'float: right;');
-            $('div#notebook-container').append(startBtn);
-
-            // Solved, next task button, for users to continue the study after solving a task
-            var nextBtn = $('<button/>').text('Solved, Next Task').click(function() {
-                if (getCurrentTaskNumber() < getTaskCountInNotebook()){
-                    // Advance to next task
-                    nextTask(action_types.next, 500);
-                } else {
-                    // The user clicked on "I am done"
-                    // TODO: Change this to a modal?
-                    if (confirm(warningMsg)) nextTask(action_types.finished, 500);
-                }
-            });
-            nextBtn.attr('id', 'next_btn').attr('class', 'btn btn-primary btn-task');
-            nextBtn.attr('style', 'float: right;');
-            $('div#notebook-container').append(nextBtn);
-
-            // NOT Solved, next task button. Acts as a skip task button.
-            var nsNextBtn = $('<button/>').text('NOT solved, Next Task').click(function() {
-                nextTask(action_types.skip, 500);
-            });
-            nsNextBtn.attr('id', 'not_solved_next_btn').attr('class', 'btn btn-danger btn-task');
-            nsNextBtn.attr('style','float: right;margin-right:10px;');
-            $('div#notebook-container').append(nsNextBtn);
-
-            // Run and Test button. Runs the users code (but does no testing?)
-            var execBtn = $('<button/>').text('Run and Test').click(function(){
-                var tasknum = getCurrentTaskNumber();
-                console.debug(`Running task ${tasknum}`);
-
-                // Measure time
-                timeExecMeasure(tasknum);
-                // Execute the current cell
-                IPython.notebook.execute_selected_cells();
-
-                // Uncomment to record everytime the user runs code
-                //submitCode(userId, IPython.notebook.toJSON(), action_types.run, token);
-
-                // Record current date in a hidden element?
-                var currentdate = new Date();
-                $("#"+id).find(".timing_area").text("Last execution started: "+currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds())
-            });
-            execBtn.attr('class', 'btn btn-success btn-task execBtn');
-            execBtn.attr('style', 'align-self:flex-end; width: 120px;');
-            $('div.code_cell').append(execBtn);
-
-            // Reset button. Resets the IPython kernel.
-            var resetBtn = $('<button/>').text('Restart kernel').attr('title', 'Use this in case that your program got stuck. This will reset all variables.').click(function(){
-                //Resets the kernel
-                if(confirm("Do you want to restart the kernel? This will reset all variables.")){
-                    IPython.notebook.kernel.restart();
-                }
-            });
-            resetBtn.attr('class', 'btn btn-warning btn-task').attr('id', 'reset_btn');
-            resetBtn.attr('style', 'float: right;width: 110px;margin-right:10px;');
-            $('div#notebook-container').append(resetBtn);
+        // Remove interface elements
+        $('div#tab_content').hide();
+        $('div#menubar-container').hide();
+        // Remove link to notebook tree
+        $("div#ipython_notebook a").remove();
 
 
+        // Setup variables
+        var userId = document.cookie.replace(/(?:(?:^|.*;\s*)userId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        var token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 
-            $('.cell').attr('id', function(i) {
-                return 'cell'+(i+1);
-            });
+        // Task Progress
+        var taskProgress1 = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress1')
+            .attr('style', 'color: red; font-weight: bold').html(' Current Task Progress: ');
+        var taskProgress2 = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress2')
+            .attr('style', 'color: red; font-weight: bold').html(getCurrentTaskNumber());
+        var taskProgress3 = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress3')
+            .attr('style', 'color: red; font-weight: bold').html(' out of ' + getTaskCountInNotebook());
 
-            var popoverText = "It looks like you pasted code into the editor. This is perfectly fine, but please let us know where you found it.";
-            var id = 1;
-            $('#cell'+id).addClass("task0");
+        $('#save_widget').append(taskProgress1);
+        $('#save_widget').append(taskProgress2);
+        $('#save_widget').append(taskProgress3);
 
-            for (i = 1; i <= getTaskCountInNotebook(); i++) {
-                id += 1;
-                $('#cell'+id).addClass("task"+i);
-                $('#cell'+id+' button').addClass("task"+i);
-                $('#cell'+id).append("<a name='task"+i+"'></a>");
+        // ------------------------
+        // Custom interface buttons
+        // ------------------------
 
-                id += 1;
-                $('#cell'+id).addClass("task"+i);
-                $('#cell'+id+' > .input > .inner_cell').popover({content: popoverText, trigger: 'manual', delay: {show: 100, hide: 300}, animation: true, placement: 'auto'});
-                $('#cell'+id+' button').addClass("task"+i);
-            }
-
-            var ia = $('.input_area');
-            timing_area = $('<div/>')
-                .attr("style", "padding: 0 5px; border: none; border-top: 1px solid #CFCFCF; font-size: 80%;")
-                .attr("class", "timing_area")
-                .appendTo(ia);
-
+        function nextTask(action_type, save_timeout=0) {
+            setCurrentTaskNumber(getCurrentTaskNumber()+1);
+            console.info(`Advancing to task ${getCurrentTaskNumber()}`);
+            scrollToCurrentTask();
             hideTasks();
+            taskProgress2.html(getCurrentTaskNumber());
+            if (save_timeout != 0) {
+                IPython.notebook.save_notebook();
+                var saved = setInterval(function() {
+                    if (!IPython.notebook.dirty) {
+                        clearInterval(saved);
+                        submitCode(userId, IPython.notebook.toJSON(), action_type, token);
+                    }
+                }, 500);
+            } else {
+                submitCode(userId, IPython.notebook.toJSON(), action_type, token);
+            }
+
         }
+
+        // Ok, got it button, shown on the first cell of the task file for insructions
+        var startBtn = $('<button/>').text('Ok, got it!').click(function() { nextTask(action_types.got_it) });
+        startBtn.attr('id', 'start_btn').attr('class', 'btn btn-primary btn-start');
+        startBtn.attr('style', 'float: right;');
+        $('div#notebook-container').append(startBtn);
+
+        // Solved, next task button, for users to continue the study after solving a task
+        var nextBtn = $('<button/>').text('Solved, Next Task').click(function() {
+            if (getCurrentTaskNumber() < getTaskCountInNotebook()){
+                // Advance to next task
+                nextTask(action_types.next, 500);
+            } else {
+                // The user clicked on "I am done"
+                // TODO: Change this to a modal?
+                if (confirm(warningMsg)) nextTask(action_types.finished, 500);
+            }
+        });
+        nextBtn.attr('id', 'next_btn').attr('class', 'btn btn-primary btn-task');
+        nextBtn.attr('style', 'float: right;');
+        $('div#notebook-container').append(nextBtn);
+
+        // NOT Solved, next task button. Acts as a skip task button.
+        var nsNextBtn = $('<button/>').text('NOT solved, Next Task').click(function() {
+            nextTask(action_types.skip, 500);
+        });
+        nsNextBtn.attr('id', 'not_solved_next_btn').attr('class', 'btn btn-danger btn-task');
+        nsNextBtn.attr('style','float: right;margin-right:10px;');
+        $('div#notebook-container').append(nsNextBtn);
+
+        // Run and Test button. Runs the users code (but does no testing?)
+        var execBtn = $('<button/>').text('Run and Test').click(function(e){
+            var tasknum = getCurrentTaskNumber();
+            console.debug(`Running task ${tasknum}`);
+
+            // Measure time
+            timeExecMeasure(tasknum);
+            // Make sure the current task's code cell is focused
+            IPython.notebook.get_cell(tasknum*2).focus_cell();
+            // Execute the current cell
+            IPython.notebook.execute_selected_cells();
+
+            // Uncomment to record everytime the user runs code
+            //submitCode(userId, IPython.notebook.toJSON(), action_types.run, token);
+
+            // Record current date in a hidden element?
+            var currentdate = new Date();
+            $("#"+id).find(".timing_area").text("Last execution started: "+currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds())
+        });
+        execBtn.attr('class', 'btn btn-success btn-task execBtn');
+        execBtn.attr('style', 'align-self:flex-end; width: 120px;');
+        $('div.code_cell').append(execBtn);
+
+        // Reset button. Resets the IPython kernel.
+        var resetBtn = $('<button/>').text('Restart kernel').attr('title', 'Use this in case that your program got stuck. This will reset all variables.').click(function(){
+            //Resets the kernel
+            if(confirm("Do you want to restart the kernel? This will reset all variables.")){
+                IPython.notebook.kernel.restart();
+            }
+        });
+        resetBtn.attr('class', 'btn btn-warning btn-task').attr('id', 'reset_btn');
+        resetBtn.attr('style', 'float: right;width: 110px;margin-right:10px;');
+        $('div#notebook-container').append(resetBtn);
+
+
+        // --------------------------
+        // Notebook cell modification
+        // --------------------------
+
+        // Number every cell with cell1...celln
+        $('.cell').attr('id', function(i) {
+            return 'cell'+(i+1);
+        });
+
+
+        // Label cells in pairs with task0...taskn, except for the first cell
+        // which is considered an introduction cell.
+        let id = 1;
+        $('#cell'+id).addClass("task0");
+
+        for (i = 1; i <= getTaskCountInNotebook(); i++) {
+            id += 1;
+            $('#cell'+id).addClass("task"+i);
+            $('#cell'+id+' button').addClass("task"+i);
+            $('#cell'+id).append("<a name='task"+i+"'></a>");
+
+            id += 1;
+            $('#cell'+id).addClass("task"+i);
+            $('#cell'+id+' button').addClass("task"+i);
+        }
+
+        var ia = $('.input_area');
+        timing_area = $('<div/>')
+            .attr("style", "padding: 0 5px; border: none; border-top: 1px solid #CFCFCF; font-size: 80%;")
+            .attr("class", "timing_area")
+            .appendTo(ia);
+
+        // Hide and scroll to current task
+        hideTasks();
+        scrollToCurrentTask();
+        console.info("Developer Observatory loaded");
     });
 });
 

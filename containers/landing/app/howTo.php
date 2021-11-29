@@ -155,16 +155,6 @@ try{
             // $sth->bindParam(':condition', $resultsCond);
             $sth->bindParam(':category', $resultsCat['category']);
             $sth->execute();
-
-            // Invalidate token
-            $curl = curl_init();
-            curl_setopt_array($curl, array(
-                CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $tokenSetUrl.$token.'/'.$token2,
-                CURLOPT_USERAGENT => 'LandingPage Token Verifier'
-            ));
-            $respToken = curl_exec($curl);
-
         }
     } else {
         $webpageMessageHeader = "Error:";
