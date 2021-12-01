@@ -1,43 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+<?php $title="Study - How To"; include('template/head.php'); ?>
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+<?php include('template/body.html') ?>
 
-    <title>Study - How To</title>
-    
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link href="static/css/main.css" rel="stylesheet">
-    <style>
-    .glyphicon.spinning {
-        animation: spin 1s infinite linear;
-        -webkit-animation: spin2 1s infinite linear;
-    }
-
-    @keyframes spin {
-        from { transform: scale(1) rotate(0deg); }
-        to { transform: scale(1) rotate(360deg); }
-    }
-
-    @-webkit-keyframes spin2 {
-        from { -webkit-transform: rotate(0deg); }
-        to { -webkit-transform: rotate(360deg); }
-    }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-    </nav>
-    <div class="container">
-        <hr class="featurette-divider">
-        <div class="row">
-            <div class="col-lg-6" style="text-align: justify;">
-                <p><h2>About the online editor</h2>
+<hr class="featurette-divider">
+<div class="row">
+    <div class="col-lg-6" style="text-align: justify;">
+        <p><h2>About the online editor</h2>
 For this study, you will be writing your code using a Python online editor. The editor is based on Jupyter notebook, an interactive, web-based platform that allows you to write and execute Python code directly in your browser. Please note that we use Python version 2.7.12 for this study.<br />
 
 We have included all third party libraries that we think you might require to complete all programming tasks. 
@@ -62,22 +33,15 @@ You can stop and return to the study at any point, your progress is automaticall
 
 
 <p>Please wait while we start your editor, this will only take a couple of seconds. You can start as soon as the button shows “Let me start the study.”</p>
-            </div>
-            <div class="col-lg-6">
-                <img src="static/img/instructions_w.png" width="90%" />
-            </div>
         </div>
-        <button class="btn btn-lg btn-warning" id="loadingButton">
-            <span class="glyphicon glyphicon-refresh spinning"></span> Preparing your notebook...    
-        </button>
-        <hr class="featurette-divider">
+        <div class="col-lg-6">
+            <img src="static/img/instructions_w.png" width="90%" />
+        </div>
     </div>
-
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-
-    <!-- Bootstrap Core JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <button class="btn btn-lg btn-warning" id="loadingButton">
+        <span class="glyphicon glyphicon-refresh spinning"></span> Preparing your notebook...    
+    </button>
+    <hr class="featurette-divider">
 
     <script>
     function executeQuery() {
@@ -110,5 +74,8 @@ You can stop and return to the study at any point, your progress is automaticall
     // run the first time; all subsequent calls will take care of themselves
     setTimeout(executeQuery, 1000);
     </script>
-</body>
+
+
+<?php include('template/bodyend.html') ?>
+
 </html>
