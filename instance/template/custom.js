@@ -272,12 +272,20 @@ define([
         $('div#notebook-container').append(nextBtn);
 
         // NOT Solved, next task button. Acts as a skip task button.
-        var nsNextBtn = $('<button/>').text('NOT solved, Next Task').click(function() {
+        var nsNextBtn = $('<button/>').text('Not Solved, Next Task').click(function() {
             nextTask(action_types.skip, 500);
         });
         nsNextBtn.attr('id', 'not_solved_next_btn').attr('class', 'btn btn-danger btn-task');
         nsNextBtn.attr('style','float: right;margin-right:10px;');
         $('div#notebook-container').append(nsNextBtn);
+
+        // Stop button. Will stop the current running cell.
+        let stopBtn = $("<button/>").text("Stop cell").attr("title", "Stops the currently running cell. Helpful for infinite loops.").click(() => {
+            IPython.notebook.kernel.interrupt();
+        });
+        stopBtn.attr("class", "btn btn-danger btn-task").attr("id", "stop_btn");
+        stopBtn.attr('style', 'float: right;margin-right:10px;');
+        $('div#notebook-container').append(stopBtn);
 
         // Run and Test button. Runs the users code (but does no testing?)
         var execBtn = $('<button/>').text('Run and Test').click(function(e){
@@ -310,8 +318,10 @@ define([
             }
         });
         resetBtn.attr('class', 'btn btn-warning btn-task').attr('id', 'reset_btn');
-        resetBtn.attr('style', 'float: right;width: 110px;margin-right:10px;');
+        resetBtn.attr('style', 'float: right;margin-right:10px;');
         $('div#notebook-container').append(resetBtn);
+
+
 
 
         // --------------------------
