@@ -4,10 +4,12 @@
 # of the MIT license.  See the LICENSE file for details.
 import docker, sys, redis, signal, os, logging
 from time import sleep
+from statsd import StatsClient
 from threading import Thread, current_thread
 import manager_config as config
 
 RUNNING_CONTAINERS = []
+STAT_PREFIX = "devob.manager"
 logging.basicConfig(stream=sys.stdout)
 log = logging.getLogger()
 
@@ -91,6 +93,7 @@ if __name__ == "__main__":
     if not check_cwd():
         log.critical("Looks like the script isn't running in the correct directory, "
                 "please run from the root directory of developer observatory")
+        exit(1)
 
     log.setLevel(config.LOG_LEVEL)
     log.info("Developer Observatory Docker Management Script")
@@ -117,6 +120,9 @@ if __name__ == "__main__":
     r.delete(config.REDIS_BOOTING_COUNTER)
     r.delete(config.REDIS_OLD_LIST)
 
+    # Setup statsd
+    statsd = StatsClient()
+
     log.info("Monitoring redis for events, press Ctrl-C to stop...")
     while(True):
         # -- Add new containers if needed --
@@ -127,27 +133,26 @@ if __name__ == "__main__":
             log.error("Lost connection to redis, stopping script...")
             sigint_handler(None,None)
 
-
         # Check booting counter
         if booting == None or dint(booting) < 0:
             r.set(config.REDIS_BOOTING_COUNTER, 0)
 
-        # -- Add new containers --
-        if dint(r.llen(config.REDIS_QUEUE)) + \
-                dint(r.get(config.REDIS_BOOTING_COUNTER)) < config.POOL_SIZE:
-            try:
-                r.incr(config.REDIS_BOOTING_COUNTER)
+        # Log number of containers to statsd
+        queue_len = dint(r.llen(config.REDIS_QUEUE))
+        booting = dint(r.get(config.REDIS_BOOTING_COUNTER))
+        statsd.gauge(f"{STAT_PREFIX}.running_containers", len(RUNNING_CONTAINERS))
+        statsd.gauge(f"{STAT_PREFIX}.container_queue", queue_len)
+        statsd.gauge(f"{STAT_PREFIX}.booting", booting)
 
+        # -- Add new containers --
+        if queue_len + booting < config.POOL_SIZE:
+            r.incr(config.REDIS_BOOTING_COUNTER)
+            statsd.gauge(f"{STAT_PREFIX}.started_containers", 1, delta=True)
+            with statsd.timer(f"{STAT_PREFIX}.create_container"):
                 # Create docker container
                 c = create_container(client, config.INSTANCE_TAG)
-
                 r.rpush(config.REDIS_QUEUE, f"{c.name}|||{c.id[:12]}")
-                log.info(f"Started new container: {c.name}")
-
-            except Exception as e:
-                log.error(e)
-                sys.exit(1)
-
+            log.info(f"Started new container: {c.name}")
             r.decr(config.REDIS_BOOTING_COUNTER)
 
         # -- Remove old containers --
