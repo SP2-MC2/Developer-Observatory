@@ -12,7 +12,8 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -yqq \
     python3-flask \
     python3-requests \
     libcrypto++-dev \
-    libssl-dev
+    libssl-dev \
+    runit
 
 # Install pip for python2
 ADD https://bootstrap.pypa.io/pip/2.7/get-pip.py .
@@ -37,6 +38,8 @@ COPY app.py .
 
 # Copy runscript
 COPY run_instance.sh .
+# Copy runit directory and services
+COPY ./services/ ./services/
 
 EXPOSE 60000 8888
 
