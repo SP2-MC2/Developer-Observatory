@@ -128,7 +128,7 @@ function hideTasks(){
         $(".btn-start").hide();
     }
 
-    $("#task_progress2").html(currentTask);
+    $("#task_progress").html(`Current task progress: ${currentTask} out of ${getTaskCountInNotebook()}`)
 
     for (i = 0; i <= getTaskCountInNotebook(); i++) {
         if(currentTask < i){
@@ -215,16 +215,10 @@ define([
         var token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 
         // Task Progress
-        var taskProgress1 = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress1')
-            .attr('style', 'color: red; font-weight: bold').html(' Current Task Progress: ');
-        var taskProgress2 = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress2')
-            .attr('style', 'color: red; font-weight: bold').html(getCurrentTaskNumber());
-        var taskProgress3 = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress3')
-            .attr('style', 'color: red; font-weight: bold').html(' out of ' + getTaskCountInNotebook());
+        let taskProgress = $('<span/>').attr('class', 'task_progress').attr('id', 'task_progress')
+            .attr('style', 'color: red');
 
-        $('#save_widget').append(taskProgress1);
-        $('#save_widget').append(taskProgress2);
-        $('#save_widget').append(taskProgress3);
+        $("#save_widget").append(taskProgress);
 
         // ------------------------
         // Custom interface buttons
