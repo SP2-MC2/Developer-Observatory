@@ -26,10 +26,10 @@
 // ---------
 
 const action_types = {
-    "got_it": "b",
+    "start": "b",
     "run": "r",
-    "skip": "n",
-    "next": "s",
+    "skip": "s",
+    "next": "n",
     "finished": "f"
 }
 
@@ -91,7 +91,7 @@ function submitCode(user_id, code, stat, token) {
         type: "POST",
         data: JSON.stringify({"type": "code", "user_id": user_id, "code": code, "time": {"focusTime": diffTimeFocus, "execTime":JSON.stringify(timeStampArray)}, "status": stat, "token": token}),
         contentType: "application/json; charset=utf-8",
-        success: function(result) {
+        success: function() {
             if(stat == 'f'){
                 var userId = document.cookie.replace(/(?:(?:^|.*;\s*)userId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
                 var token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
@@ -112,8 +112,6 @@ function submitPastedCode(user_id, code, tasknum, cellid, token) {
         type: "POST",
         data: JSON.stringify({'type': 'pasted', 'user_id': user_id, 'code': code, 'tasknum': tasknum, 'cellid':cellid, "token": token}),
         contentType: "application/json; charset=utf-8",
-        success: function(result) {
-        }
     });
 
 }
@@ -131,10 +129,14 @@ function hideTasks(){
     $("#task_progress").html(`Current task progress: ${currentTask} out of ${getTaskCountInNotebook()}`)
 
     for (i = 0; i <= getTaskCountInNotebook(); i++) {
-        if(currentTask < i){
-            $(".task"+i).hide();
-        } else {
+        if (i < currentTask) {
             $(".task"+i).show();
+            $(`.task${i} button`).hide();
+        } else if (i == currentTask) {
+            $(".task"+i).show();
+            $(`.task${i} button`).show();
+        } else {
+            $(".task"+i).hide();
         }
     }
 
@@ -227,9 +229,8 @@ define([
         function nextTask(action_type, save_timeout=0) {
             setCurrentTaskNumber(getCurrentTaskNumber()+1);
             console.info(`Advancing to task ${getCurrentTaskNumber()}`);
-            scrollToCurrentTask();
             hideTasks();
-            taskProgress2.html(getCurrentTaskNumber());
+            scrollToCurrentTask();
             if (save_timeout != 0) {
                 IPython.notebook.save_notebook();
                 var saved = setInterval(function() {
@@ -245,18 +246,18 @@ define([
         }
 
         // Ok, got it button, shown on the first cell of the task file for insructions
-        var startBtn = $('<button/>').text('Ok, got it!').click(function() { nextTask(action_types.got_it) });
+        var startBtn = $('<button/>').text("Start").click(function() { nextTask(action_types.start) });
         startBtn.attr('id', 'start_btn').attr('class', 'btn btn-primary btn-start');
         startBtn.attr('style', 'float: right;');
         $('div#notebook-container').append(startBtn);
 
-        // Solved, next task button, for users to continue the study after solving a task
-        var nextBtn = $('<button/>').text('Solved, Next Task').click(function() {
+        // Next button, for users to continue the study after solving a task
+        var nextBtn = $('<button/>').text('Next Task').click(function() {
             if (getCurrentTaskNumber() < getTaskCountInNotebook()){
                 // Advance to next task
                 nextTask(action_types.next, 500);
             } else {
-                // The user clicked on "I am done"
+                // The user clicked on "Exit study"
                 // TODO: Change this to a modal?
                 if (confirm(warningMsg)) nextTask(action_types.finished, 500);
             }
@@ -265,24 +266,19 @@ define([
         nextBtn.attr('style', 'float: right;');
         $('div#notebook-container').append(nextBtn);
 
-        // NOT Solved, next task button. Acts as a skip task button.
-        var nsNextBtn = $('<button/>').text('Not Solved, Next Task').click(function() {
+        // Skip button. Acts as a skip task button.
+        var skipBtn = $('<button/>').text('Skip Task').click(function() {
             nextTask(action_types.skip, 500);
         });
-        nsNextBtn.attr('id', 'not_solved_next_btn').attr('class', 'btn btn-danger btn-task');
-        nsNextBtn.attr('style','float: right;margin-right:10px;');
-        $('div#notebook-container').append(nsNextBtn);
+        skipBtn.attr('id', 'not_solved_next_btn').attr('class', 'btn btn-primary btn-task');
+        skipBtn.attr('style','float: right;margin-right:10px;');
+        $('div#notebook-container').append(skipBtn);
 
-        // Stop button. Will stop the current running cell.
-        let stopBtn = $("<button/>").text("Stop cell").attr("title", "Stops the currently running cell. Helpful for infinite loops.").click(() => {
-            IPython.notebook.kernel.interrupt();
-        });
-        stopBtn.attr("class", "btn btn-danger btn-task").attr("id", "stop_btn");
-        stopBtn.attr('style', 'float: right;margin-right:10px;');
-        $('div#notebook-container').append(stopBtn);
+        // Code buttons, these are attached directly to the code cell
+        var codeBtns = $('<div/>').attr("class", "code-btns");
 
-        // Run and Test button. Runs the users code (but does no testing?)
-        var execBtn = $('<button/>').text('Run and Test').click(function(e){
+        // Run button. Runs the user's code
+        var execBtn = $('<button/>').text('Run').click(function(){
             var tasknum = getCurrentTaskNumber();
             console.debug(`Running task ${tasknum}`);
 
@@ -300,22 +296,30 @@ define([
             var currentdate = new Date();
             $("#"+id).find(".timing_area").text("Last execution started: "+currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds())
         });
-        execBtn.attr('class', 'btn btn-success btn-task execBtn');
-        execBtn.attr('style', 'align-self:flex-end; width: 120px;');
-        $('div.code_cell').append(execBtn);
+        execBtn.attr("title", "Runs the currently active code cell");
+        execBtn.attr('class', 'btn btn-success btn-task execBtn btn-code');
+        codeBtns.append(execBtn);
+
+        // Stop button. Will stop the current running cell.
+        var stopBtn = $("<button/>").text("Stop").click(function() {
+            IPython.notebook.kernel.interrupt();
+        });
+        stopBtn.attr("title", "Stops the currently running cell. Helpful for infinite loops.");
+        stopBtn.attr("class", "btn btn-danger btn-task btn-code").attr("id", "stop_btn");
+        codeBtns.append(stopBtn);
 
         // Reset button. Resets the IPython kernel.
-        var resetBtn = $('<button/>').text('Restart kernel').attr('title', 'Use this in case that your program got stuck. This will reset all variables.').click(function(){
+        var resetBtn = $('<button/>').text('Reset').click(function(){
             //Resets the kernel
             if(confirm("Do you want to restart the kernel? This will reset all variables.")){
                 IPython.notebook.kernel.restart();
             }
         });
-        resetBtn.attr('class', 'btn btn-warning btn-task').attr('id', 'reset_btn');
-        resetBtn.attr('style', 'float: right;margin-right:10px;');
-        $('div#notebook-container').append(resetBtn);
+        resetBtn.attr('title', 'Use this in case that your program got stuck. This will reset all variables.');
+        resetBtn.attr('class', 'btn btn-warning btn-task btn-code').attr('id', 'reset_btn');
+        codeBtns.append(resetBtn);
 
-
+        $('div.code_cell').append(codeBtns);
 
 
         // --------------------------
@@ -337,7 +341,7 @@ define([
             id += 1;
             $('#cell'+id).addClass("task"+i);
             $('#cell'+id+' button').addClass("task"+i);
-            $('#cell'+id).append("<a name='task"+i+"'></a>");
+            // $('#cell'+id).append("<a name='task"+i+"'></a>");
 
             id += 1;
             $('#cell'+id).addClass("task"+i);

@@ -2,7 +2,12 @@
 #
 # This software may be modified and distributed under the terms
 # of the MIT license.  See the LICENSE file for details.
-import docker, sys, redis, signal, os, logging
+import docker
+import sys
+import redis
+import signal
+import os
+import logging
 from time import sleep
 from threading import Thread, current_thread
 import manager_config as config
@@ -10,6 +15,7 @@ import manager_config as config
 RUNNING_CONTAINERS = []
 logging.basicConfig(stream=sys.stdout)
 log = logging.getLogger()
+
 
 def sigint_handler(sig, frame):
     log.info("Interrupt received, stopping all containers")
@@ -20,9 +26,11 @@ def sigint_handler(sig, frame):
     else:
         sys.exit(0)
 
+
 def check_cwd():
     # TODO: Implement directory checks
     return True
+
 
 def create_container(client, tag):
     """Run docker create to make a new instance and return the created
@@ -100,6 +108,13 @@ if __name__ == "__main__":
     # Setup signal handler
     signal.signal(signal.SIGINT, sigint_handler)
 
+    # Setup redis
+    r = redis.Redis(host="localhost", port=6379, db=0)
+    # Reset various redis keys
+    r.delete(config.REDIS_QUEUE)
+    r.delete(config.REDIS_BOOTING_COUNTER)
+    r.delete(config.REDIS_OLD_LIST)
+
 
     # Setup docker
     client = docker.from_env()
@@ -109,13 +124,6 @@ if __name__ == "__main__":
                                                 tag=config.INSTANCE_TAG)
     log.debug(f"Finished building {config.INSTANCE_TAG}")
 
-
-    # Setup redis
-    r = redis.Redis(host="localhost", port=6379, db=0)
-    # Reset various redis keys
-    r.delete(config.REDIS_QUEUE)
-    r.delete(config.REDIS_BOOTING_COUNTER)
-    r.delete(config.REDIS_OLD_LIST)
 
     log.info("Monitoring redis for events, press Ctrl-C to stop...")
     while(True):

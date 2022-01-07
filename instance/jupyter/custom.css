@@ -8,3 +8,12 @@ div.output_stderr {background-color: white;}
 div.output_stderr pre {color: black;}
 a {color: #337ab7;}
 a:hover, a:focus {color: #23527c;}
+
+.btn-code{
+  margin-left: 1em;
+}
+
+.code-btns {
+  align-self: flex-end;
+  margin: 0.5em 0 1.5em 0;
+}
