@@ -54,20 +54,17 @@ services:
       - main
 
   stats:
-    image: graphiteapp/graphite-statsd
+    build: ./containers/stats
     networks:
       - main
     environment:
+      CARBON_AGGGERATOR_DISABLED: 1
       GRAPHITE_LOG_RENDERING_PERFORMANCE: false
       GRAPHITE_LOG_CACHE_PERFORMANCE: false
-      GRAPHITE_LOG_FILE_INFO: /var/log/info.log
-      GRAPHITE_LOG_FILE_EXCEPTION: '-'
     ports:
       - 8083:80
       - 127.0.0.1:2003-2004:2003-2004
-      - 127.0.0.1:2023-2024:2023-2024
       - 127.0.0.1:8125:8125/udp
-      - 127.0.0.1:8126:8126
 
 
 volumes:
