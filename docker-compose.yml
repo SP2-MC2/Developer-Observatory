@@ -58,7 +58,6 @@ services:
     networks:
       - main
     environment:
-      CARBON_AGGGERATOR_DISABLED: 1
       GRAPHITE_LOG_RENDERING_PERFORMANCE: false
       GRAPHITE_LOG_CACHE_PERFORMANCE: false
     ports:
