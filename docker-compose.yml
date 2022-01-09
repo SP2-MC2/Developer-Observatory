@@ -38,9 +38,11 @@ services:
 
   control:
     build: ./containers/control
+    init: true
     depends_on:
       - db
       - redis
+      - stats
     networks:
       - main
 
@@ -50,7 +52,21 @@ services:
       - db
     networks:
       - main
-  
+
+  stats:
+    build: ./containers/stats
+    networks:
+      - main
+    environment:
+      CARBON_AGGGERATOR_DISABLED: 1
+      GRAPHITE_LOG_RENDERING_PERFORMANCE: false
+      GRAPHITE_LOG_CACHE_PERFORMANCE: false
+    ports:
+      - 8083:80
+      - 127.0.0.1:2003-2004:2003-2004
+      - 127.0.0.1:8125:8125/udp
+
+
 volumes:
   data:
     name: devob-data

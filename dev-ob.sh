@@ -54,7 +54,7 @@ build_config() {
     if [[ $appMode == "DEBUG" ]]; then
       logLevel="DEBUG"
     else
-      logLevel="WARNING"
+      logLevel="INFO"
     fi
 
     # Configuring secrets, since this has persistence
@@ -96,6 +96,7 @@ build_config() {
     # Control
     cp config/control_config.py containers/control/config.py
     sed -i "s|%pwUser2%|$pwUser2|g" containers/control/config.py
+    sed -i "s|%logLevel%|$logLevel|g" containers/control/config.py
 
     # Submit
     cp config/submit.py containers/submit/configSubmit.py
