@@ -64,8 +64,9 @@ build_config() {
         pwUser1=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
         pwUser2=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
         pwUser3=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+        submitSecret=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 
-        echo -e "#!/bin/bash\npwUser0=$pwUser0\npwUser1=$pwUser1\npwUser2=$pwUser2\npwUser3=$pwUser3" > config/.secrets
+        echo -e "#!/bin/bash\npwUser0=$pwUser0\npwUser1=$pwUser1\npwUser2=$pwUser2\npwUser3=$pwUser3\nsubmitSecret=$submitSecret" > config/.secrets
     else
         source config/.secrets
     fi
@@ -102,6 +103,7 @@ build_config() {
     cp config/submit.py containers/submit/configSubmit.py
     sed -i "s|%pwUser2%|$pwUser2|g" containers/submit/configSubmit.py
     sed -i "s|%finalSurveyURL%|$finalSurveyURL|g" containers/submit/configSubmit.py
+    sed -i "s|%submitSecret%|$submitSecret|g" containers/submit/configSubmit.py
 
     # Manager
     cp config/manager_config.py manager/
@@ -124,6 +126,7 @@ build_config() {
     cp instance/template/custom.js instance/jupyter/
     sed -i "s|%landingURL%|$landingURL|g" instance/app.py
     sed -i "s|%appMode%|$appMode|g" instance/app.py
+    sed -i "s|%submitSecret%|$submitSecret|g" instance/app.py
     sed -i "s|%landingURL%|$landingURL|g" instance/jupyter/custom.js
     sed -i "s|%skippedTaskSurveyURL%|$skippedTaskSurveyURL|g" instance/jupyter/custom.js
     sed -i "s|%taskCount%|$taskCount|g" instance/jupyter/custom.js

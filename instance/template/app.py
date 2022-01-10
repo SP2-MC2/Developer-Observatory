@@ -36,7 +36,7 @@ def sendData(data):
 
     https = urllib3.PoolManager(cert_reqs="CERT_NONE")
     dataRaw = {}
-    dataRaw['auth-token'] = "q9c(,}=C{mQD~)2#&t3!`fLQ3zk`9," # our client authentication, should be switched to a dynamic token
+    dataRaw['auth-token'] = "%submitSecret%"
     dataRaw['json-payload'] = json.dumps(data)
     encoded_body = json.dumps(dataRaw).encode('utf-8')
     https.request('POST', DB_URL, headers={'Content-Type': 'application/json'}, body=encoded_body)

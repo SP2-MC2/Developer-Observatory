@@ -76,6 +76,9 @@ networks:
   instances:
     driver: bridge
     internal: true
+    ipam:
+      config:
+        - subnet: 192.168.128.0/24
 
 secrets:
   pub_cert:

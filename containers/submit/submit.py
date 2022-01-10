@@ -179,7 +179,7 @@ def redirectToSurvey(userid, token):
 @app.route('/submit', methods=['POST'])
 def submit():
     data = json.loads(request.data)
-    if data['auth-token'] == "q9c(,}=C{mQD~)2#&t3!`fLQ3zk`9,":
+    if data['auth-token'] == app.config["SUBMIT_SECRET"]:
         try:
             jsonPayload = json.loads(data['json-payload'])
             if(len(jsonPayload) <= MAX_LENGTH):
