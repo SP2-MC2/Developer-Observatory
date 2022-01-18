@@ -6,13 +6,13 @@ from model import CreatedInstances
 log = logging.getLogger(__name__)
 
 FILTER = """\
-(heartbeat <= NOW() - '3 hours'::INTERVAL AND \
+(heartbeat <= NOW() - '{}'::INTERVAL AND \
 "instanceTerminated" is false) OR \
 (finished is true AND "instanceTerminated" is false)"""
 
 
 def check_old_instances(session_builder, redis):
-    stmt = select(CreatedInstances).where(text(FILTER))
+    stmt = select(CreatedInstances).where(text(FILTER.format(config.INSTANCE_IDLE_TIME)))
     with session_builder.begin() as session:
         result = session.execute(stmt)
 

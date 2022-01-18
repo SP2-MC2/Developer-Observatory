@@ -13,13 +13,12 @@ import ssl
 
 app = Flask(__name__)
 
-remote_task_file = "%landingURL%/get_ipynb/"
+remote_task_file = "http://nginx/get_ipynb/"
 target_file = "/home/jupyter/tasks.ipynb"
 user_data_file = "/home/jupyter/.instanceinfo"
 app_mode = "%appMode%"
 
-DB_HOST = "%landingURL%"
-DB_URL = "{:s}/submit".format(DB_HOST)
+DB_URL = "http://nginx/submit"
 
 def sendData(data):
     import urllib3

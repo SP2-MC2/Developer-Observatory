@@ -6,7 +6,6 @@ set -m
 # Pull in config values
 source ./developer-observatory.conf
 
-dockerProjectName="devob"
 instancesNetwork="${dockerProjectName}_instances"
 
 # Colors
@@ -22,6 +21,8 @@ usage() {
     echo -e "generate\t Runs the notebook task generator"
     echo -e "configure\t Generates configuration files"
     echo -e "run\t\t Configures and runs the docker application in current terminal"
+    echo -e "manager\t\t Runs the manager script. Should be run at the same time as the primary app"
+    echo -e "recreate\t\t Given a service name, recreates a running container with new configuration"
     echo -e "down\t\t Alias for compose down"
     echo -e "reset\t\t Completely resets the application to the inital state - ALL DATA IS DELETED"
     echo -e "compose\t\t Any commands after compose will be sent to a docker-compose with the correct arguments"
@@ -98,6 +99,8 @@ build_config() {
     cp config/control_config.py containers/control/config.py
     sed -i "s|%pwUser2%|$pwUser2|g" containers/control/config.py
     sed -i "s|%logLevel%|$logLevel|g" containers/control/config.py
+    sed -i "s|%instanceIdleTime%|$instanceIdleTime|g" containers/control/config.py
+
 
     # Submit
     cp config/submit.py containers/submit/configSubmit.py
@@ -184,8 +187,15 @@ elif [[ $1 == "run" ]]; then
   build_config
 
   runCompose build && runCompose up
+elif [[ $1 == "manager" ]]; then
+  ./manager/pyenv/bin/python3 ./manager/app.py
+
+elif [[ $1 == "recreate" ]]; then
+  runCompose up -d --build $1
+
 elif [[ $1 == "down" ]]; then
   runCompose down
+
 elif [[ $1 == "reset" ]]; then
   echo -e "${RED}WARNING: THIS WILL CLEAR ALL OF YOUR DATA, INCLUDING STUDY RESULTS${NC}"
   prompt_confirm "Reset this developer observatory to its initial state" || exit 0
@@ -215,8 +225,10 @@ elif [[ $1 == "reset" ]]; then
 elif [[ $1 == "compose" ]]; then
   shift
   runCompose $@
+
 elif [[ $1 == "docs" ]]; then
   python3 -m http.server --directory doc/html
+
 else
   echo -e "${RED}Unknown command: $1${NC}"
   exit 1
