@@ -22,7 +22,7 @@ usage() {
     echo -e "configure\t Generates configuration files"
     echo -e "run\t\t Configures and runs the docker application in current terminal"
     echo -e "manager\t\t Runs the manager script. Should be run at the same time as the primary app"
-    echo -e "recreate\t\t Given a service name, recreates a running container with new configuration"
+    echo -e "recreate\t Given a service name, recreates a running container with new configuration"
     echo -e "down\t\t Alias for compose down"
     echo -e "reset\t\t Completely resets the application to the inital state - ALL DATA IS DELETED"
     echo -e "compose\t\t Any commands after compose will be sent to a docker-compose with the correct arguments"
@@ -188,10 +188,15 @@ elif [[ $1 == "run" ]]; then
 
   runCompose build && runCompose up
 elif [[ $1 == "manager" ]]; then
-  ./manager/pyenv/bin/python3 ./manager/app.py
+  source ./manager/pyenv/bin/activate
+  python3 ./manager/app.py
 
 elif [[ $1 == "recreate" ]]; then
-  runCompose up -d --build $1
+  if [[ -n $2 ]]; then
+    runCompose up -d --build $2
+  else
+    echo -e "${RED}You must specifiy a service to recreate$NC"
+  fi
 
 elif [[ $1 == "down" ]]; then
   runCompose down
