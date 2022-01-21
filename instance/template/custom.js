@@ -76,9 +76,10 @@ function heartbeatQuery() {
 
 
 function scrollToCurrentTask(){
-    let id = 1 + (getCurrentTaskNumber() * 2);
+    let tasknum = getCurrentTaskNumber();
+
     // Scroll
-    let elm = $("#cell"+id);
+    let elm = $(`.task${tasknum}`);
     if (elm.offset() != undefined) {
         elm[0].scrollIntoView();
     }
@@ -231,6 +232,18 @@ define([
             console.info(`Advancing to task ${getCurrentTaskNumber()}`);
             hideTasks();
             scrollToCurrentTask();
+            // Focus code or other cell
+            let task_num = getCurrentTaskNumber();
+            let code_cell_id = $(`.task${task_num}.code_cell`).attr("id");
+            if (typeof code_cell_id == "undefined") {
+                code_cell_id = $(`.task${task_num}.cell`).attr("id");
+            }
+
+            if (typeof code_cell_id != "undefined") {
+                let jupyter_cell_id = parseInt(code_cell_id.replace("cell", "")) - 1;
+                IPython.notebook.get_cell(jupyter_cell_id).focus_cell();
+            }
+
             if (save_timeout != 0) {
                 IPython.notebook.save_notebook();
                 var saved = setInterval(function() {
@@ -248,7 +261,7 @@ define([
         // Ok, got it button, shown on the first cell of the task file for insructions
         var startBtn = $('<button/>').text("Start").click(function() { nextTask(action_types.start) });
         startBtn.attr('id', 'start_btn').attr('class', 'btn btn-primary btn-start');
-        startBtn.attr('style', 'float: right;');
+        startBtn.attr('style', 'float: right; margin-top:10px');
         $('div#notebook-container').append(startBtn);
 
         // Next button, for users to continue the study after solving a task
@@ -263,7 +276,7 @@ define([
             }
         });
         nextBtn.attr('id', 'next_btn').attr('class', 'btn btn-primary btn-task');
-        nextBtn.attr('style', 'float: right;');
+        nextBtn.attr('style', 'float: right; margin-top: 10px;');
         $('div#notebook-container').append(nextBtn);
 
         // Skip button. Acts as a skip task button.
@@ -271,7 +284,7 @@ define([
             nextTask(action_types.skip, 500);
         });
         skipBtn.attr('id', 'not_solved_next_btn').attr('class', 'btn btn-primary btn-task');
-        skipBtn.attr('style','float: right;margin-right:10px;');
+        skipBtn.attr('style','float: right; margin: 10px 10px 0 0');
         $('div#notebook-container').append(skipBtn);
 
         // Code buttons, these are attached directly to the code cell
@@ -285,17 +298,16 @@ define([
             // Measure time
             timeExecMeasure(tasknum);
             // Make sure the current task's code cell is focused
-            IPython.notebook.get_cell(tasknum*2).focus_cell();
+            let code_cell_id = $(`.task${tasknum}.code_cell`).attr("id");
+            let jupyter_cell_id = parseInt(code_cell_id.replace("cell", "")) - 1;
+            IPython.notebook.get_cell(jupyter_cell_id).focus_cell();
             // Execute the current cell
             IPython.notebook.execute_selected_cells();
 
             // Uncomment to record everytime the user runs code
             //submitCode(userId, IPython.notebook.toJSON(), action_types.run, token);
-
-            // Record current date in a hidden element?
-            var currentdate = new Date();
-            $("#"+id).find(".timing_area").text("Last execution started: "+currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds())
         });
+
         execBtn.attr("title", "Runs the currently active code cell");
         execBtn.attr('class', 'btn btn-success btn-task execBtn btn-code');
         codeBtns.append(execBtn);
@@ -331,28 +343,13 @@ define([
             return 'cell'+(i+1);
         });
 
-
-        // Label cells in pairs with task0...taskn, except for the first cell
-        // which is considered an introduction cell.
-        let id = 1;
-        $('#cell'+id).addClass("task0");
-
-        for (i = 1; i <= getTaskCountInNotebook(); i++) {
-            id += 1;
-            $('#cell'+id).addClass("task"+i);
-            $('#cell'+id+' button').addClass("task"+i);
-            // $('#cell'+id).append("<a name='task"+i+"'></a>");
-
-            id += 1;
-            $('#cell'+id).addClass("task"+i);
-            $('#cell'+id+' button').addClass("task"+i);
-        }
-
-        var ia = $('.input_area');
-        timing_area = $('<div/>')
-            .attr("style", "padding: 0 5px; border: none; border-top: 1px solid #CFCFCF; font-size: 80%;")
-            .attr("class", "timing_area")
-            .appendTo(ia);
+        // Using cell metadata, label each cell with task numbers
+        $('.cell').attr('id', function(i) {
+            let cell = Jupyter.notebook.get_cell(i);
+            if ("metadata" in cell && "tasknum" in cell.metadata) {
+                $(`#cell${i+1}`).addClass(`task${cell.metadata.tasknum}`);
+            }
+        });
 
         // Hide and scroll to current task
         hideTasks();
