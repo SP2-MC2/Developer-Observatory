@@ -1,10 +1,13 @@
 FROM python:3.8
 
-WORKDIR /usr/src/app
+RUN useradd user -u 1000 -Um --shell=/usr/bin/nologin
+
+USER user
+WORKDIR /home/user/
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
-COPY . .
+COPY --chown=user:user . .
 RUN mkdir -p tmp
 
 CMD ["python", "./notebookgen.py"]

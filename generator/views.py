@@ -448,10 +448,15 @@ def generate_notebook_files(notebook, fileprefix=None, include_fixed=True, condi
             fixed_replace_ops = get_task_replace_ops(task_index, option.tasks[0])
             for operations in task_replace_ops.values():
                 operations.extend(fixed_replace_ops)
-            task_index += 1
             cells = option.tasks[0].get_cell_list()
+            # Add task_index to cell metadata
+            for cell in cells:
+                cell["metadata"]["tasknum"] = task_index
+
             for nb in list(files.values()):
                 nb['cells'].extend(cells)
+
+            task_index += 1
         elif option.random:
             tasks_short = [slugify(task.short) for task in option.tasks]
             tasks_cells = [task.get_cell_list() for task in option.tasks]
@@ -462,20 +467,29 @@ def generate_notebook_files(notebook, fileprefix=None, include_fixed=True, condi
                 order = ''
                 for idx in task_order:
                     order += tasks_short[idx]
+
                 for filename, content in files.items():
                     if first_task:
                         new_filename = filename + '_[' + order
                     else:
                         new_filename = filename + '_' + order
                     files_new[new_filename] = copy.deepcopy(content)
+
                     reordered_cells = []
-                    for idx in task_order:
-                        reordered_cells.extend(tasks_cells[idx])
+                    for ctr, task_idx in enumerate(task_order):
+                        cells = copy.deepcopy(tasks_cells[task_idx])
+                        # Add task_index to cell metadata
+                        for c in cells:
+                            c["metadata"]["tasknum"] = task_index + ctr
+                        reordered_cells.extend(cells)
+
                     files_new[new_filename]['cells'].extend(reordered_cells)
                     replace_ops_new[new_filename] = copy.deepcopy(task_replace_ops[filename])
                     for (idx, task_idx) in enumerate(task_order):
                         replace_ops_new[new_filename].extend(
                             get_task_replace_ops(task_index + idx, option.tasks[task_idx]))
+
+
             first_task = False
             files = files_new
             task_replace_ops = replace_ops_new
