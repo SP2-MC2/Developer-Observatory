@@ -11,7 +11,12 @@
     % if field.type == 'BooleanField'
     <div class="checkbox">
         <label>
-          {{ field(required=field.flags.required, **kwargs)|safe }}
+            % if field.flags.required
+              {{ field(required=field.flags.required, **kwargs)|safe }}
+            % else
+              {{ field(**kwargs)|safe }}
+            % endif
+
             % if print_label
             {{ label_text }}
             % endif
@@ -37,7 +42,13 @@
         % if print_label
         {{ field.label(class="control-label", text=label_text) }}
         % endif
-        {{ field(class='form-control', required=field.flags.required, **kwargs)|safe }}
+
+        % if field.flags.required
+            {{ field(class='form-control', required=field.flags.required, **kwargs)|safe }}
+        % else
+            {{ field(class='form-control', **kwargs)|safe }}
+        % endif
+
         % if help
             <p id="{{ help_id }}" class="help-block">{{ help|safe }}</p>
         % endif

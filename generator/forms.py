@@ -12,8 +12,10 @@ class KeyValueForm(FlaskForm):
     key = StringField(u'Key')
     value = StringField(u'Value')
 
+    class Meta:
+        csrf = False
+
     def __init__(self, *args, **kwargs):
-        kwargs['csrf_enabled'] = False
         super(KeyValueForm, self).__init__(*args, **kwargs)
 
 
@@ -51,8 +53,10 @@ class OrderOptionForm(FlaskForm):
             if not field.raw_data or not field.raw_data[0]:
                 raise ValidationError("Select at least one task")
 
+    class Meta:
+        csrf = False
+
     def __init__(self, *args, **kwargs):
-        kwargs['csrf_enabled'] = False
         super(OrderOptionForm, self).__init__(*args, **kwargs)
 
 
