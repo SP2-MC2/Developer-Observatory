@@ -88,5 +88,6 @@ class NotebookOptionsForm(FlaskForm):
 
 class TemplateForm(FlaskForm):
     name = StringField(u'Name', [validators.Length(min=1, max=100), validators.InputRequired()])
-    tasks = MultiCheckboxField(u'Tasks', [validators.InputRequired(message='Select at least one task')], coerce=int)
+    #tasks = MultiCheckboxField(u'Tasks', [validators.InputRequired(message='Select at least one task')], coerce=int)
+    tasks = MultiCheckboxField(u'Tasks', [validators.Length(min=1, message='at least one task')], coerce=int)
     order_options = FieldList(FormField(OrderOptionForm), min_entries=1, label=u'Option')
