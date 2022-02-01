@@ -1,19 +1,22 @@
 FROM ubuntu:xenial
 
 WORKDIR /usr/src/app
-
-# Add jupyter user
-RUN useradd jupyter --shell=/usr/bin/nologin
-
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -yqq \
     build-essential \
+    zlib1g-dev \
     python \
     python-dev \
     python3-flask \
     python3-requests \
-    libcrypto++-dev \
-    libssl-dev \
     runit
+
+ADD https://www.openssl.org/source/old/1.0.2/openssl-1.0.2.tar.gz .
+RUN tar -xzf openssl-1.0.2.tar.gz
+WORKDIR /usr/src/app/openssl-1.0.2/
+RUN ./Configure --prefix=/ --openssldir=/usr/lib/openssl --libdir=lib/x86_64-linux-gnu/ shared no-idea no-mdc2 zlib enable-tlssext linux-x86_64
+RUN make depend && make && make install
+RUN ln -s /include/openssl /usr/include/openssl
+WORKDIR /usr/src/app
 
 # Install pip for python2
 ADD https://bootstrap.pypa.io/pip/2.7/get-pip.py .
@@ -22,6 +25,9 @@ RUN python2 get-pip.py
 # Install python2 dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt
+
+# Add jupyter user
+RUN useradd jupyter --shell=/usr/bin/nologin
 
 # Add custom jupyter files
 RUN mkdir -p /home/jupyter/.jupyter/custom/

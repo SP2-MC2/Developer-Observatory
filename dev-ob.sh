@@ -188,6 +188,7 @@ elif [[ $1 == "run" ]]; then
 
   runCompose build && runCompose up
 elif [[ $1 == "manager" ]]; then
+  build_config
   source ./manager/pyenv/bin/activate
   python3 ./manager/app.py
 

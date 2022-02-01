@@ -291,14 +291,15 @@ define([
         var codeBtns = $('<div/>').attr("class", "code-btns");
 
         // Run button. Runs the user's code
-        var execBtn = $('<button/>').text('Run').click(function(){
+        var execBtn = $('<button/>').text('Run').click(function(e){
             var tasknum = getCurrentTaskNumber();
+            let target = $(e.target);
             console.debug(`Running task ${tasknum}`);
 
             // Measure time
             timeExecMeasure(tasknum);
             // Make sure the current task's code cell is focused
-            let code_cell_id = $(`.task${tasknum}.code_cell`).attr("id");
+            let code_cell_id = target.parents(".code_cell").attr("id");
             let jupyter_cell_id = parseInt(code_cell_id.replace("cell", "")) - 1;
             IPython.notebook.get_cell(jupyter_cell_id).focus_cell();
             // Execute the current cell
