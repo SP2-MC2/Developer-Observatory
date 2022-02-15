@@ -354,7 +354,8 @@ define([
 
         // Hide and scroll to current task
         hideTasks();
-        scrollToCurrentTask();
+        // Delay needed to let DOM finish loading properly
+        setTimeout(scrollToCurrentTask(), 500);
         console.info("Developer Observatory loaded");
     });
 });

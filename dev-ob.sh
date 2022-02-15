@@ -113,6 +113,7 @@ build_config() {
     sed -i "s|%instancesNetwork%|$instancesNetwork|g" manager/manager_config.py
     sed -i "s|%poolSize%|$poolSize|g" manager/manager_config.py
     sed -i "s|%logLevel%|$logLevel|g" manager/manager_config.py
+    sed -i "s|%dockerProjectName%|$dockerProjectName|g" manager/manager_config.py
 
     # Postgres
     mkdir -p containers/postgres
