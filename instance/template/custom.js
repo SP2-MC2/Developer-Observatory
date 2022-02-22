@@ -1,24 +1,28 @@
 /*
  * Copyright (C) 2017 Christian Stransky
+ * Copyright (C) 2022 Joe Lewis
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
  */
 
 /*
  * Task numbering scheme:
- * This is a convoluted topic in this code that deserves some documentation.
- * This code assumes that every task has two cells, one markdown and one code.
- * Every notebook also has a standalone introduction  and conclusion markdown
- * cell that will not have any run or execute buttons. Every cell is assigned
- * an id sequentially in the format of cell{id} where id starts at 1 and is
- * incremented for every cell. After cell ids are assigned, every two cells
- * (except first and last) are given the same class in the format of task{id}
- * where id starts at 0. The task classes are what is used to show and hide
- * tasks as the user advances through the notebook.
  *
- * Lastly, there is one more numbering scheme to mention, which is the cell
- * indices used by Jupyter internally. These are indexed at 0 and are
- * incremented the same way as cell ids.
+ * Jupyter notebooks used by this interface are required to have extra metadata
+ * for each cell describing its task number. This is used by the interface to
+ * correctly hide and show cells related to a certain tasks.
+ *
+ * There a few numbering schemes to be aware of
+ *  - Jupyter's cell numbering: indexed at 0 and incremented for every cell
+ *
+ *  - Cell id numbering: indexed at 1 and incremented for every cell. Can be
+ *    found in the id field of every cell's enclosing div element. Ex: cell1,
+ *    cell2, etc.
+ *
+ *  - Cell task numbering: indexed at 0 and set based on cell metadata. Can be
+ *    found as a class of every cell's enclosing div element. Ex: task0, task1,
+ *    etc.
+ *
  */
 
 // ---------
@@ -132,7 +136,7 @@ function hideTasks(){
     for (i = 0; i <= getTaskCountInNotebook(); i++) {
         if (i < currentTask) {
             $(".task"+i).show();
-            $(`.task${i} button`).hide();
+            $(`.task${i} button`).show();
         } else if (i == currentTask) {
             $(".task"+i).show();
             $(`.task${i} button`).show();
