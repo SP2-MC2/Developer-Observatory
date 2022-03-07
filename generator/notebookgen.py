@@ -7,7 +7,9 @@ from database import db
 from flask import Flask
 import os.path
 from flaskext.markdown import Markdown
+
 from views import nb_gen
+from auth import login_manager, auth_bp
 
 
 def create_app():
@@ -23,6 +25,8 @@ def create_app():
     app.jinja_env.add_extension('jinja2.ext.do')
     app.register_blueprint(nb_gen, url_prefix='')
     db.init_app(app)
+    login_manager.init_app(app)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     return app, db_path
 
 

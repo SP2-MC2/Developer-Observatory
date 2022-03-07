@@ -3,6 +3,7 @@ Flask
 Flask-Markdown
 Flask-SQLAlchemy
 Flask-WTF
+Flask-Login
 itsdangerous
 Jinja2
 Markdown

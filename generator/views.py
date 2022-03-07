@@ -17,6 +17,7 @@ from pygments.formatters.html import HtmlFormatter
 from pygments import highlight
 from database import db
 from models import Cell, CellType, Task, TaskCell, NotebookTemplate, OrderOption, Condition, StringPair, NotebookFile
+from flask_login import login_required
 
 nb_gen = Blueprint('nbg', __name__, template_folder='templates', static_folder='static')
 
@@ -34,6 +35,7 @@ def show_tutorial():
 
 
 @nb_gen.route('/notebooks/new', methods=['GET', 'POST'])
+@login_required
 def create_notebook():
     form = TemplateForm()
     task_list = Task.query.order_by(Task.short).all()
@@ -70,6 +72,7 @@ def create_notebook():
 
 
 @nb_gen.route('/tasks/new', methods=['GET', 'POST'])
+@login_required
 def create_task():
     form = TaskForm()
     cell_list = Cell.query.order_by(Cell.name).all()
@@ -101,6 +104,7 @@ def create_task():
 
 
 @nb_gen.route('/notebooks', methods=['GET', 'POST'])
+@login_required
 def list_notebooks():
     if request.method == 'POST':
         if request.form['delete']:
@@ -115,6 +119,7 @@ def list_notebooks():
 
 
 @nb_gen.route('/tasks', methods=['GET', 'POST'])
+@login_required
 def list_tasks():
     if request.method == 'POST' and request.form['delete']:
         task = Task.query.get_or_404(request.form['delete'])
@@ -128,6 +133,7 @@ def list_tasks():
 
 
 @nb_gen.route('/cells', methods=['GET', 'POST'])
+@login_required
 def list_cells():
     if request.method == 'POST' and request.form['delete']:
         cell = Cell.query.get_or_404(request.form['delete'])
@@ -140,6 +146,7 @@ def list_cells():
 
 
 @nb_gen.route('/conditions', methods=['GET', 'POST'])
+@login_required
 def list_conditions():
     if request.method == 'POST' and request.form['delete']:
         condition = Condition.query.get_or_404(request.form['delete'])
@@ -152,6 +159,7 @@ def list_conditions():
 
 
 @nb_gen.route('/tasks/<int:task_id>')
+@login_required
 def view_task(task_id):
     task = Task.query.filter_by(id=task_id).first_or_404()
     code_cells = {}
@@ -164,6 +172,7 @@ def view_task(task_id):
 
 
 @nb_gen.route('/cells/<int:cell_id>')
+@login_required
 def view_cell(cell_id):
     cell = Cell.query.filter_by(id=cell_id).first_or_404()
     code = None
@@ -174,6 +183,7 @@ def view_cell(cell_id):
 
 
 @nb_gen.route('/notebooks/<int:nb_id>/generate', methods=['GET', 'POST'])
+@login_required
 def generate_notebooks(nb_id):
     nb = NotebookTemplate.query.get_or_404(nb_id)
     form = NotebookOptionsForm()
@@ -201,6 +211,7 @@ def generate_notebooks(nb_id):
 
 
 @nb_gen.route('/notebooks/<int:nb_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_notebook(nb_id):
     nb = NotebookTemplate.query.get_or_404(nb_id)
     form = TemplateForm(obj=nb)
@@ -249,6 +260,7 @@ def edit_notebook(nb_id):
 
 
 @nb_gen.route('/tasks/<int:task_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_task(task_id):
     task = Task.query.get_or_404(task_id)
     form = TaskForm(obj=task)
@@ -276,6 +288,7 @@ def edit_task(task_id):
 
 
 @nb_gen.route('/cells/<int:cell_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_cell(cell_id):
     cell = Cell.query.get_or_404(cell_id)
     form = CellForm(obj=cell)
@@ -304,6 +317,7 @@ def edit_cell(cell_id):
 
 
 @nb_gen.route('/conditions/<int:condition_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_condition(condition_id):
     condition = Condition.query.get_or_404(condition_id)
     form = ConditionForm(obj=condition)
@@ -328,6 +342,7 @@ def edit_condition(condition_id):
 
 
 @nb_gen.route('/cells/new', methods=['GET', 'POST'])
+@login_required
 def create_cell():
     form = CellForm()
     if form.validate_on_submit():
@@ -345,6 +360,7 @@ def create_cell():
 
 
 @nb_gen.route('/conditions/new', methods=['GET', 'POST'])
+@login_required
 def create_condition():
     form = ConditionForm()
     if form.validate_on_submit():
