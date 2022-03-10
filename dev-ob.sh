@@ -162,7 +162,9 @@ elif [[ $1 == "install" ]]; then
   pip install --user docker redis
 
 elif [[ $1 == "generate" ]]; then
-  docker build generator/ -t "$dockerProjectName-generator"
+  docker build generator/ \
+    -t "$dockerProjectName-generator" \
+    --build-arg uid=$UID
 
   if [[ ! -d generator/generated ]]; then
     mkdir generator/generated

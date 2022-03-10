@@ -1,6 +1,7 @@
 FROM python:3.8
+ARG uid=1000
 
-RUN useradd user -u 1000 -Um --shell=/usr/bin/nologin
+RUN useradd user -u $uid -Um --shell=/usr/bin/nologin
 
 USER user
 WORKDIR /home/user/
