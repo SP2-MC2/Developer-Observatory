@@ -169,7 +169,7 @@ def redirectToSurvey(userid, token):
     row.finished = True
     db.session.commit()
 
-    url = app.config["FINAL_SURVEY_URL"] + "/?uid="+userid+"&tok="+token+"&newtest=Y"
+    url = f'{app.config["FINAL_SURVEY_URL"]}/?condition={row.category}&pid={userid}'
     if(not (url.startswith("http://") or url.startswith("https://"))):
         url = "https://" + url
     print(url)

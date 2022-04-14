@@ -84,6 +84,8 @@ def stop_container(client, cont_id):
     except ValueError:
         log.warn(f"Couldn't remove container {cont_id} from running containers list")
         return False
+    except docker.errors.NotFound:
+        log.warn(f"Couldn't remove container {cont_id}: Container not found")
 
 
 def dint(s):

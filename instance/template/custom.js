@@ -310,7 +310,7 @@ define([
             IPython.notebook.execute_selected_cells();
 
             // Uncomment to record everytime the user runs code
-            //submitCode(userId, IPython.notebook.toJSON(), action_types.run, token);
+            submitCode(userId, IPython.notebook.toJSON(), action_types.run, token);
         });
 
         execBtn.attr("title", "Runs the currently active code cell");

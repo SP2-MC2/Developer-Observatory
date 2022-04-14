@@ -37,6 +37,7 @@ COPY jupyter/custom.css /home/jupyter/.jupyter/custom/
 COPY jupyter/notebook.html /usr/local/lib/python3.8/dist-packages/notebook/templates/notebook.html
 COPY jupyter/jupyter_notebook_config.py /home/jupyter/.jupyter/
 COPY jupyter/nbconfig/ /home/jupyter/.jupyter/nbconfig/
+COPY testing.py /home/jupyter/
 RUN chown -R jupyter /home/jupyter
 
 # Copy flask app
