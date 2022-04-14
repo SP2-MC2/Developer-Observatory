@@ -22,6 +22,8 @@ usage() {
   echo -e "configure\t Generates configuration files"
   echo -e "run\t\t Configures and runs the docker application in current terminal"
   echo -e "manager\t\t Runs the manager script. Should be run at the same time as the primary app"
+  echo -e "backup-db\t Backs up the entire database to a .sql file"
+  echo -e "export-db\t Exports the database to a series of .csv files"
   echo -e "recreate\t Given a service name, recreates a running container with new configuration"
   echo -e "down\t\t Alias for compose down"
   echo -e "reset\t\t Completely resets the application to the inital state - ALL DATA IS DELETED"
@@ -152,7 +154,14 @@ checkCompose() {
 
 runCompose() {
   checkCompose
-  $COMPOSE -p $dockerProjectName $@
+  $COMPOSE -p $dockerProjectName $*
+}
+
+exportTable() {
+  # This command does not work with runCompose
+  checkCompose
+  echo "Exporting $2/$1.csv"
+  $COMPOSE -p $dockerProjectName exec db psql --csv -c "SELECT * FROM \"$1\"" notebook postgres > $2/$1.csv 
 }
 
 
@@ -200,6 +209,20 @@ elif [[ $1 == "manager" ]]; then
 
   build_config
   python3 ./manager/app.py
+
+elif [[ $1 == "backup-db" ]]; then
+  backupFile=backups/$(date +"%m-%d-%Y:%H-%M").sql
+  mkdir -p backups
+  runCompose exec db pg_dump -U postgres notebook > $backupFile
+
+elif [[ $1 == "export-db" ]]; then
+  exportFolder=exports/$(date +"%m-%d-%Y:%H-%M")
+  mkdir -p exports
+  mkdir $exportFolder
+  # Export tables
+  exportTable "createdInstances" $exportFolder
+  exportTable "consent" $exportFolder
+  exportTable "jupyter" $exportFolder
 
 elif [[ $1 == "recreate" ]]; then
   if [[ -n $2 ]]; then
