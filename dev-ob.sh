@@ -161,7 +161,7 @@ exportTable() {
   # This command does not work with runCompose
   checkCompose
   echo "Exporting $2/$1.csv"
-  $COMPOSE -p $dockerProjectName exec db psql --csv -c "SELECT * FROM \"$1\"" notebook postgres > $2/$1.csv 
+  $COMPOSE -p $dockerProjectName exec db psql -q -P pager --csv -c "SELECT * FROM \"$1\"" notebook postgres > $2/$1.csv 
 }
 
 
