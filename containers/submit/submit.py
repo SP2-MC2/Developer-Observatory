@@ -73,6 +73,7 @@ class CreatedInstances(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.String())
     ip = db.Column(db.String())
+    origin = db.Column(db.Integer)
     time = db.Column(db.DateTime, default=db.func.current_timestamp())
     ec2instance = db.Column(db.String())
     category = db.Column(db.Integer)
@@ -169,7 +170,7 @@ def redirectToSurvey(userid, token):
     row.finished = True
     db.session.commit()
 
-    url = f'{app.config["FINAL_SURVEY_URL"]}/?condition={row.category}&pid={userid}'
+    url = f'{app.config["FINAL_SURVEY_URL"]}/?condition={row.category}&pid={userid}&origin={row.origin}'
     if(not (url.startswith("http://") or url.startswith("https://"))):
         url = "https://" + url
     print(url)

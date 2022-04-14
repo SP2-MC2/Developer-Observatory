@@ -14,7 +14,7 @@
         <p>We hope that participating in this study will be both fun and educational. We are very grateful for your donation of time and effort to help our research.</p>
     </div>
 </div>
-<button onclick="window.location='/consent.php'" class="btn btn-default" id="submit-btn">Continue</button>
+<button onclick="window.location='/consent.php' + window.location.search" class="btn btn-default" id="submit-btn">Continue</button>
 
 <hr class="featurette-divider">
 

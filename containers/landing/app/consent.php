@@ -20,6 +20,13 @@ if(studyLimitReached()) {
 $token = generateAlphanumeric(12);
 $token2 = generateAlphanumeric(12);
 
+// Get origin parameter
+$originParam = htmlspecialchars($_GET["origin"]);
+// If its empty set it to 0 for unknown
+if ($originParam == "") {
+    $originParam = "0";
+}
+
 
 require("static/consent.php");
 ?>

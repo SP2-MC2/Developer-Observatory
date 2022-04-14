@@ -9,6 +9,7 @@ class CreatedInstances(Base):
     id = Column(Integer, primary_key=True)
     userid = Column(String)
     ip = Column(String)
+    origin = Column(Integer)
     time = Column(DateTime, default=func.current_timestamp())
     ec2instance = Column(String)
     category = Column(Integer)

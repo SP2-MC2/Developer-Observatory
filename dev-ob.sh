@@ -44,6 +44,7 @@ prompt_confirm() {
 build_config() {
   if [[ -d "generator/generated" ]]; then
     echo "Generating configuration files and secrets"
+    mkdir -p containers/submit/tasks/
     cp -r generator/generated/* containers/submit/tasks/
   else
     echo -ne "${RED}It seems there are no tasks generated. Please generate "

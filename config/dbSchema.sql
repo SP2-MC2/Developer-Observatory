@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS "createdInstances" (
     id serial primary key,
     userid text,
     ip text NOT NULL,
+    origin integer,
     time timestamp without time zone,
     ec2instance text,
     category integer,

@@ -11,11 +11,20 @@ require_once('util.php');
 
 $token = htmlspecialchars($_GET['token']);
 $token2 = htmlspecialchars($_GET['token2']);
+$originParam = htmlspecialchars($_GET["origin"]);
 $remoteIp = get_ip();
 
 if(!checkToken($token, $token2)) {
     $webpageMessageHeader = "No token found";
     $webpageMessage = "You must access this site with a token.";
+    $webpageRedirect = False;
+    include(__DIR__."/static/error.php");
+    die();
+}
+
+if (is_null($originParam)) {
+    $webpageMessageHeader = "Invalid URL Parameters";
+    $webpageMessage = "Your URL parameters were invalid";
     $webpageRedirect = False;
     include(__DIR__."/static/error.php");
     die();
@@ -120,9 +129,10 @@ try{
         $resultsUserID = $sth->fetch(PDO::FETCH_ASSOC);
         if($resultsUserID['userid'] != $token){
             // If token not in DB yet, then add it, otherwise skip it
-            $sth = $connect->prepare('INSERT INTO "createdInstances" (ip, time, userid, condition, category) VALUES (:ip, NOW(), :userid, :condition, :category);');
+            $sth = $connect->prepare('INSERT INTO "createdInstances" (ip, time, origin, userid, condition, category) VALUES (:ip, NOW(), :origin, :userid, :condition, :category);');
             $sth->bindParam(':ip', $remoteIp);
             $sth->bindParam(':userid', $token);
+            $sth->bindParam(':origin', $originParam);
             $sth->bindParam(':condition', $results['cond']);
             // $sth->bindParam(':condition', $resultsCond);
             $sth->bindParam(':category', $resultsCat['category']);

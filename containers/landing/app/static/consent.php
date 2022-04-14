@@ -93,7 +93,7 @@
     </div>
 </div>
 
-<form id="consent_form" name="form" role="form" method="post" action="howTo.php?token=<?php echo $token;?>&token2=<?php echo $token2; echo $originParam;?>">
+<form id="consent_form" name="form" role="form" method="post" action="howTo.php?token=<?php echo $token;?>&token2=<?php echo $token2?>&origin=<?php echo $originParam;?>">
   <hr>
   <div class="form-group">
     <div class="checkbox">
