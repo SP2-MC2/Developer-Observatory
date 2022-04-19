@@ -47,5 +47,21 @@ if (isset($_COOKIE["token"]) && isset($_COOKIE["userId"])) {
     }
 }
 
+$pid = htmlspecialchars($_GET['pid']);
+$originParam = htmlspecialchars($_GET["origin"]);
+// If its empty set it to 0 for unknown
+if ($originParam == "") {
+    $originParam = "0";
+}
+
+if(!checkPid($pid)) {
+    $webpageMessageHeader = "No partipant ID found";
+    $webpageMessage = "This study must be accessed from the consent survey given to you by the study administrators";
+    $webpageRedirect = False;
+    include(__DIR__."/static/error.php");
+    die();
+}
+
+
 include("static/intro.php");
 ?>

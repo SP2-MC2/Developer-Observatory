@@ -7,12 +7,13 @@
 
 define('__DIR__', dirname(__FILE__)); 
 require_once(__DIR__."/../webpageConf/config.php");
+require_once('util.php');
 $connect = new PDO("pgsql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass);
 
 $userId = htmlspecialchars($_POST["userid"]);
 $token2 = htmlspecialchars($_POST["token2"]);
 
-if((strlen($userId) == 12 and preg_match("/^[0-9a-z]+$/", $userId)) and (strlen($token2) == 12 and preg_match("/^[0-9a-z]+$/", $token2))){
+if(checkPid($userId) and (strlen($token2) == 12 and preg_match("/^[0-9a-z]+$/", $token2))){
     $sth = $connect->prepare('SELECT instanceid as instanceid, hash as hash FROM "createdInstances" LEFT JOIN "conditions" ON "createdInstances".condition = "conditions".condition WHERE userid = :userid AND NOT "instanceTerminated";');
     $sth->bindParam(':userid', $userId);
     $sth->execute();

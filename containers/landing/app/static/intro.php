@@ -14,10 +14,32 @@
         <p>We hope that participating in this study will be both fun and educational. We are very grateful for your donation of time and effort to help our research.</p>
     </div>
 </div>
-<button onclick="window.location='/consent.php' + window.location.search" class="btn btn-default" id="submit-btn">Continue</button>
+<form id="continue_form" method="post" action="howTo.php">
+    <div id="recaptcha" class="g-recaptcha"
+    data-sitekey="<?php echo $reCaptchaSiteKey; ?>"
+    data-size="invisible"
+    data-callback="onReCaptcha"
+    ></div>
+    <input type="hidden" id="pid" name="pid" value="<?php echo $pid ?>">
+    <input type="hidden" id="origin" name="origin" value="<?php echo $originParam ?>">
+    <button type="submit" class="btn btn-default" id="submit-btn">Continue</button>
+</form>
 
 <hr class="featurette-divider">
 
 <?php include('template/bodyend.html') ?>
 
-</html>
+<script type="text/javascript">
+  $("#submit-btn").click((e) => {
+    grecaptcha.execute();
+    e.preventDefault();
+  });
+
+  function onReCaptcha(resp) {
+      $("#continue_form")[0].submit();
+  }
+</script>
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+<html>

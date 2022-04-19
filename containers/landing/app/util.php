@@ -7,6 +7,10 @@ function checkToken($token1, $token2) {
     return preg_match("/^[0-9a-z]{12}$/", $token1) and preg_match("/^[0-9a-z]{12}$/", $token2);
 }
 
+function checkPid($pid) {
+    return !is_null($pid) and strlen($pid) > 0;
+}
+
 function checkMobile($userAgent) {
     // Detection Script adapted from http://detectmobilebrowsers.com/
     $pattern = '/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfr    ont|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i';

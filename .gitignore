@@ -1,5 +1,3 @@
 developer-observatory.conf
 backups/
 exports/
-containers/landing/app/static/consent.php
-containers/landing/app/static/ConsentForm.pdf

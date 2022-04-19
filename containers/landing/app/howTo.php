@@ -9,22 +9,22 @@ require_once(__DIR__."/../webpageConf/config.php");
 require_once(__DIR__.'/../vendor/autoload.php');
 require_once('util.php');
 
-$token = htmlspecialchars($_GET['token']);
-$token2 = htmlspecialchars($_GET['token2']);
-$originParam = htmlspecialchars($_GET["origin"]);
+$token = htmlspecialchars($_POST['pid']);
+$token2 = generateAlphanumeric(12);
+$originParam = htmlspecialchars($_POST["origin"]);
 $remoteIp = get_ip();
 
-if(!checkToken($token, $token2)) {
-    $webpageMessageHeader = "No token found";
-    $webpageMessage = "You must access this site with a token.";
+if(!checkPid($token)) {
+    $webpageMessageHeader = "No participant ID found";
+    $webpageMessage = "You must access this site with a participant ID.";
     $webpageRedirect = False;
     include(__DIR__."/static/error.php");
     die();
 }
 
 if (is_null($originParam)) {
-    $webpageMessageHeader = "Invalid URL Parameters";
-    $webpageMessage = "Your URL parameters were invalid";
+    $webpageMessageHeader = "Invalid Parameters";
+    $webpageMessage = "Your parameters were invalid";
     $webpageRedirect = False;
     include(__DIR__."/static/error.php");
     die();
@@ -48,9 +48,7 @@ if (!validateCaptcha()) {
     $webpageMessageHeader = "reCaptcha validation failed!";
     $webpageMessage = "No reCaptcha information found in your request or
 validation failed. You cannot continue to the study. Please contact the
-administrators if this problem persists. Redirecting to the consent form in 5
-seconds.";
-    $webpageRedirect = False;
+administrators if this problem persists.";
     include(__DIR__."/static/error.php");
     die();
 }
@@ -62,19 +60,8 @@ try{
     $redisConn = new Redis();
     $redisConn->connect($redisIp);
 
-    // Add consent form to databse
-    $sth = $connect->prepare('INSERT INTO "consent" (userid, token, accepted) VALUES (:userid, :token, true)');
-    $sth->bindParam(':userid', $token);
-    $sth->bindParam(':token', $token2);
-    $sth->execute();
-
-
     //Check if hard limit is reached:
-    $sth = $connect->prepare('SELECT COUNT(*) as count FROM "createdInstances";');
-    $sth->execute();
-
-    $results = $sth->fetch(PDO::FETCH_ASSOC);
-    if($results['count'] > $maxInstances){
+    if (studyLimitReached()) {
         $webpageMessageHeader = "Study is over";
         $webpageMessage = "Thank you for your interest! We have already received the maximum number of participants for this study.";
         $webpageRedirect = False;
