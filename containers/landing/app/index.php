@@ -55,7 +55,7 @@ if ($originParam == "") {
 }
 
 if(!checkPid($pid)) {
-    $webpageMessageHeader = "No partipant ID found";
+    $webpageMessageHeader = "No participant ID found";
     $webpageMessage = "This study must be accessed from the consent survey given to you by the study administrators";
     $webpageRedirect = False;
     include(__DIR__."/static/error.php");

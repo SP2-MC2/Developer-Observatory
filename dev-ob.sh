@@ -221,8 +221,8 @@ elif [[ $1 == "export-db" ]]; then
   mkdir $exportFolder
   # Export tables
   exportTable "createdInstances" $exportFolder
-  exportTable "consent" $exportFolder
   exportTable "jupyter" $exportFolder
+  exportTable "conditions" $exportFolder
 
 elif [[ $1 == "recreate" ]]; then
   if [[ -n $2 ]]; then
