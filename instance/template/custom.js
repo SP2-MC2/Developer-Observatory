@@ -42,7 +42,11 @@ const action_types = {
 // -----------------
 
 function getTaskCountInNotebook(){
-    return %taskCount%;
+    if ("task_count" in Jupyter.notebook.metadata) {
+        return Jupyter.notebook.metadata.task_count - 1;
+    } else {
+        return %taskCount%;
+    }
 }
 
 function setCurrentTaskNumber(task){
@@ -135,12 +139,14 @@ function hideTasks(){
 
     for (i = 0; i <= getTaskCountInNotebook(); i++) {
         const code_cell_id = $(`.task${i}`).attr("id");
-        const jupyter_cell_id = parseInt(code_cell_id.replace("cell", "")) - 1;
-        const cell = Jupyter.notebook.get_cell(jupyter_cell_id);
 
         let runnable = true;
-        if ("metadata" in cell && "runnable" in cell.metadata) {
-            runnable = cell.metadata["runnable"];
+        if (code_cell_id !== undefined) {
+            const jupyter_cell_id = parseInt(code_cell_id.replace("cell", "")) - 1;
+            const cell = Jupyter.notebook.get_cell(jupyter_cell_id);
+            if ("metadata" in cell && "runnable" in cell.metadata) {
+                runnable = cell.metadata["runnable"];
+            }
         }
 
         if (i < currentTask) {

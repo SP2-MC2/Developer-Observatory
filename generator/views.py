@@ -433,6 +433,7 @@ def generate_notebook_files(notebook, fileprefix=None, include_fixed=True, condi
     else:
         files = {fileprefix: nb_base}
         task_replace_ops = {fileprefix: []}
+
     task_index = 0
     first_task = True
     for option in notebook.options:
@@ -498,10 +499,16 @@ def generate_notebook_files(notebook, fileprefix=None, include_fixed=True, condi
             files = files_new
             task_replace_ops = replace_ops_new
             task_index += len(option.tasks)
+
+    # Add task count to each file
+    for filename in files.keys():
+        files[filename]["metadata"]["task_count"] = task_index
+
     for filename in list(files.keys()):
         apply_replace_ops(files[filename], task_replace_ops[filename])
         new_filename = filename + ']' + '.ipynb' if '[' in filename else filename + '.ipynb'
         files[new_filename] = files.pop(filename)
+
     save_notebook_files(notebook, files)
     write_db_schema()
     return len(files.keys())
