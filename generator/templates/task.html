@@ -14,6 +14,7 @@ New Task
     {{ render_field(form.name) }}
     {{ render_field(form.short, help="Max three characters to easily identify this task, e.g. \"1\" or \"T1a\"") }}
     {{ render_field(form.description) }}
+    {{ render_field(form.runnable) }}
     <hr/>
     <h3>Cells</h3>
     % for field in form.cells.entries

@@ -77,6 +77,7 @@ class TaskForm(FlaskForm):
     name = StringField(u'Name', [validators.Length(min=1, max=100), validators.InputRequired()])
     short = StringField(u'Short Identifier', [validators.Length(min=1, max=3), validators.InputRequired()])
     description = StringField(u'Description')
+    runnable = BooleanField(u"Runnable")
     cells = FieldList(SelectField(u'Cell', coerce=int), label=u'Cells', min_entries=1)
 
 

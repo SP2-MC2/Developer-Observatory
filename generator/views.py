@@ -88,6 +88,7 @@ def create_task():
                 cell_ids.append(field.data)
             task = Task(form.name.data, form.short.data)
             task.description = form.description.data
+            task.runnable = form.runnable.data
             for idx, field in enumerate(form.cells.entries):
                 task_cell = TaskCell(position=idx)
                 task_cell.cell = Cell.query.filter_by(id=field.data).first()
@@ -264,6 +265,7 @@ def edit_task(task_id):
             task.name = form.name.data
             task.description = form.description.data
             task.short = form.short.data
+            task.runnable = form.runnable.data
             for task_cell in task.cells:
                 db.session.delete(task_cell)
             for idx, field in enumerate(form.cells.entries):
@@ -452,6 +454,7 @@ def generate_notebook_files(notebook, fileprefix=None, include_fixed=True, condi
             # Add task_index to cell metadata
             for cell in cells:
                 cell["metadata"]["tasknum"] = task_index
+                cell["metadata"]["runnable"] = option.tasks[0].runnable
 
             for nb in list(files.values()):
                 nb['cells'].extend(cells)
@@ -481,6 +484,7 @@ def generate_notebook_files(notebook, fileprefix=None, include_fixed=True, condi
                         # Add task_index to cell metadata
                         for c in cells:
                             c["metadata"]["tasknum"] = task_index + ctr
+                            c["metadata"]["runnable"] = option.tasks[task_idx].runnable
                         reordered_cells.extend(cells)
 
                     files_new[new_filename]['cells'].extend(reordered_cells)

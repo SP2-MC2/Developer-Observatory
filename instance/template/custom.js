@@ -134,12 +134,29 @@ function hideTasks(){
     $("#task_progress").html(`Current task progress: ${currentTask} out of ${getTaskCountInNotebook()}`)
 
     for (i = 0; i <= getTaskCountInNotebook(); i++) {
+        const code_cell_id = $(`.task${i}`).attr("id");
+        const jupyter_cell_id = parseInt(code_cell_id.replace("cell", "")) - 1;
+        const cell = Jupyter.notebook.get_cell(jupyter_cell_id);
+
+        let runnable = true;
+        if ("metadata" in cell && "runnable" in cell.metadata) {
+            runnable = cell.metadata["runnable"];
+        }
+
         if (i < currentTask) {
             $(".task"+i).show();
-            $(`.task${i} button`).show();
+            if (runnable) {
+                $(`.task${i} button`).show();
+            } else {
+                $(`.task${i} button`).hide();
+            }
         } else if (i == currentTask) {
             $(".task"+i).show();
-            $(`.task${i} button`).show();
+            if (runnable) {
+                $(`.task${i} button`).show();
+            } else {
+                $(`.task${i} button`).hide();
+            }
         } else {
             $(".task"+i).hide();
         }

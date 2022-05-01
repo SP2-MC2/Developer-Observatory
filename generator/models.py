@@ -161,6 +161,7 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     short = db.Column(db.String(3), nullable=False)
+    runnable = db.Column(db.Boolean, default=True)
     description = db.Column(db.Text)
     cells = db.relationship('TaskCell', order_by='TaskCell.position', collection_class=ordering_list('position'),
                             cascade="all, delete-orphan")
