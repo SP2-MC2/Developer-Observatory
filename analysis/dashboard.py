@@ -37,7 +37,7 @@ def created_instances_stats(df, c_df):
     ])
 
     con_map = c_df.loc[df["condition"]]
-    con_map.index = range(0, 33)
+    con_map.index = range(0, df.shape[0])
     condition_stats = condition_stats.assign(
             category = con_map["category"],
             lib = con_map["lib"])
