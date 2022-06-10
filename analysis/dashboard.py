@@ -18,8 +18,11 @@ logging.basicConfig(stream=sys.stdout,
                     format="%(levelname)-10s %(message)s")
 log = logging.getLogger()
 
-def created_instances_stats(df, c_df):
+def created_instances_stats(df, c_df, ignored):
     print("\n====Created Instances Stats====\n")
+
+    # First remove ignored ids
+    df = df[~df["userid"].isin(ignored)]
 
     print("Total instances:", df.shape[0])
     completed = df[df["finished"] == "t"].shape[0]
@@ -39,8 +42,8 @@ def created_instances_stats(df, c_df):
     con_map = c_df.loc[df["condition"]]
     con_map.index = range(0, df.shape[0])
     condition_stats = condition_stats.assign(
-            category = con_map["category"],
-            lib = con_map["lib"])
+            category = con_map["category"].array,
+            lib = con_map["lib"].array)
     condition_stats.drop(columns=["condition"], inplace=True)
 
     #condition_stats = condition_stats[condition_stats["finished"] == "t"]
@@ -72,7 +75,17 @@ def created_instances_stats(df, c_df):
     
     print(frame)
     
+def read_ignore():
+    ignore = []
+    ignore_file = Path("ignoreids.txt")
+    if ignore_file.is_file():
+        log.debug("Reading ignoreids.txt")
 
+        f = open(ignore_file, "r")
+        for l in f.readlines():
+            ignore.append(l.split("#")[0].strip())
+
+    return ignore
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -95,11 +108,15 @@ if __name__ == "__main__":
     conditions = get_conditions_map(conditions_file)
     conditions_df = pd.DataFrame(conditions)
 
+    # Get ignored ids
+    ignored_ids = read_ignore()
+    log.debug(f"Ignoring ids {ignored_ids}")
+
 
     created_instances_file = path_arg / "createdInstances.csv"
     log.debug(f"Reading {created_instances_file}")
     created_instances = pd.read_csv(created_instances_file)
-    created_instances_stats(created_instances, conditions_df)
+    created_instances_stats(created_instances, conditions_df, ignored_ids)
 
 
 
