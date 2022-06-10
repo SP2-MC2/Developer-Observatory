@@ -26,13 +26,25 @@ if (checkMobile($useragent)) {
     die();
 }
 
+$pid = htmlspecialchars($_GET['pid']);
+$originParam = htmlspecialchars($_GET["origin"]);
+
+try {
+    // Connect to database
+    $connect = new PDO("pgsql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass);
+    $connect->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    $webpageMessageHeader = "Database error";
+    $webpageMessage = $e;
+    $webpageRedirect = False;
+    include(__DIR__."/static/error.php");
+    die();
+}
+
 if (isset($_COOKIE["token"]) && isset($_COOKIE["userId"])) {
     $userId = $_COOKIE["userId"];
     $token = $_COOKIE["token"];
 
-    // Connect to database
-    $connect = new PDO("pgsql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass);
-    $connect->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     // Check if user's instance is still in the database
     $sth = $connect->prepare('SELECT instanceid as instanceid FROM "createdInstances" WHERE userid = :userid AND NOT "instanceTerminated" AND NOT finished;');
     $sth->bindParam(':userid', $userId);
@@ -45,10 +57,20 @@ if (isset($_COOKIE["token"]) && isset($_COOKIE["userId"])) {
         header("Location: /proxy/$instance/?userId=$userId&token=$token");
         die();
     }
+} else if (checkPid($pid)) {
+    $sth = $connect->prepare('SELECT instanceid as instanceid FROM "createdInstances" WHERE userid = :userid AND NOT "instanceTerminated" AND NOT finished;');
+    $sth->bindParam(':userid', $pid);
+    $sth->execute();
+    $results = $sth->fetch(PDO::FETCH_BOTH);
+    $instance = $results["instanceid"];
+
+    if(strlen($instance) > 0) {
+        // Redirect to active study instance
+        header("Location: /proxy/$instance/?userId=$pid&token=$instance");
+        die();
+    }
 }
 
-$pid = htmlspecialchars($_GET['pid']);
-$originParam = htmlspecialchars($_GET["origin"]);
 // If its empty set it to 0 for unknown
 if ($originParam == "") {
     $originParam = "0";

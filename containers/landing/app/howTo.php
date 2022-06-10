@@ -144,13 +144,14 @@ try{
             $serverData = explode("|||", $serverToRunOn[1]);
             $ec2instance = $serverData[0];
             $instanceId = $serverData[1];
-            $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid, time=NOW(), heartbeat=NOW(), condition = :condition, category = :category, finished = False, "instanceTerminated" = False WHERE userid = :userid;');
+            //$sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid, time=NOW(), heartbeat=NOW(), condition = :condition, category = :category, finished = False, "instanceTerminated" = False WHERE userid = :userid;');
+            $sth = $connect->prepare('UPDATE "createdInstances" SET ec2instance = :ec2instance, instanceid = :instanceid, time=NOW(), heartbeat=NOW(), finished = False, "instanceTerminated" = False WHERE userid = :userid;');
             $sth->bindParam(':ec2instance', $ec2instance);
             $sth->bindParam(':userid', $token);
             $sth->bindParam(':instanceid', $instanceId);
-            $sth->bindParam(':condition', $results['cond']);
+            //$sth->bindParam(':condition', $results['cond']);
             // $sth->bindParam(':condition', $resultsCond);
-            $sth->bindParam(':category', $resultsCat['category']);
+            //$sth->bindParam(':category', $resultsCat['category']);
             $sth->execute();
         }
     } else {
