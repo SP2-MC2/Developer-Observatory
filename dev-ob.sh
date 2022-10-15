@@ -159,9 +159,11 @@ runCompose() {
 
 exportTable() {
   # This command does not work with runCompose
+  # 1. name of table to export
+  # 2. Destination filename
   checkCompose
-  echo "Exporting $2/$1.csv"
-  $COMPOSE -p $dockerProjectName exec db psql -q -P pager --csv -c "SELECT * FROM \"$1\"" notebook postgres > $2/$1.csv 
+  echo "Exporting $1 to $2"
+  $COMPOSE -p $dockerProjectName exec db psql -q -P pager --csv -c "SELECT * FROM \"$1\"" notebook postgres > $2
 }
 
 
@@ -211,18 +213,30 @@ elif [[ $1 == "manager" ]]; then
   python3 ./manager/app.py
 
 elif [[ $1 == "backup-db" ]]; then
-  backupFile=backups/$(date +"%m-%d-%Y:%H-%M").sql
-  mkdir -p backups
-  runCompose exec db pg_dump -U postgres notebook > $backupFile
+  if [[ -n $2 ]]; then
+    dateFmt=$(date +"%m-%d-%Y-%H-%M")
+    backupFile=$2/$dateFmt.sql
+    mkdir -p $2
+    runCompose exec db pg_dump -U postgres notebook > $backupFile
+    echo "Done"
+  else
+    echo -e "${RED}You must specify a directory for the backup$NC"
+  fi
 
 elif [[ $1 == "export-db" ]]; then
-  exportFolder=exports/$(date +"%m-%d-%Y:%H-%M")
-  mkdir -p exports
-  mkdir $exportFolder
-  # Export tables
-  exportTable "createdInstances" $exportFolder
-  exportTable "jupyter" $exportFolder
-  exportTable "conditions" $exportFolder
+  if [[ -n $2 ]]; then
+    dateFmt=$(date +"%m-%d-%Y-%H-%M")
+    mkdir -p $2
+
+    # Export tables
+    exportTable "createdInstances" "$2/$dateFmt-createdInstances.csv"
+    exportTable "jupyter" "$2/$dateFmt-jupyter.csv"
+    exportTable "conditions" "$2/$dateFmt-conditions.csv"
+
+    echo "Done"
+  else
+    echo -e "${RED}You must specify a directory for the export$NC"
+  fi
 
 elif [[ $1 == "recreate" ]]; then
   if [[ -n $2 ]]; then
