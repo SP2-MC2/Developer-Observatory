@@ -72,7 +72,7 @@ def created_instances_stats(df, c_df, ignored):
     )
     frame = frame.assign(dropout = lambda x: 1 - x.completed / x.total)
     frame["dropout"] = frame["dropout"].apply(lambda x: "{:.0%}".format(x))
-    
+
     print(frame)
     
 def read_ignore():
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         log.error("usage: dashboard.py <csv backup directory> [log level]")
         exit(1)
-    
+
     if len(sys.argv) > 2:
         log.setLevel(sys.argv[2])
     else:
@@ -100,10 +100,18 @@ if __name__ == "__main__":
     path_arg = Path(sys.argv[1])
     if not path_arg.is_dir():
         log.error(f"{path_arg.name} is not a directory")
-        exit(1)
+        sys.exit(1)
 
-    # Read conditions
-    conditions_file = path_arg / "conditions.csv"
+    # Find most recent CSVs
+    files = sorted(path_arg.glob("*.csv"))
+    if len(files) < 3:
+        log.error(f"{path_arg.name} does not have enough files (3 csv files)")
+        sys.exit(1)
+    recent = files[-3:]
+
+
+    conditions_file = list(filter(lambda x: "conditions" in x.name, recent))[0]
+    #conditions_file = path_arg / "conditions.csv"
     log.debug(f"Reading {conditions_file}")
     conditions = get_conditions_map(conditions_file)
     conditions_df = pd.DataFrame(conditions)
@@ -113,16 +121,8 @@ if __name__ == "__main__":
     log.debug(f"Ignoring ids {ignored_ids}")
 
 
-    created_instances_file = path_arg / "createdInstances.csv"
+    created_instances_file = list(filter(lambda x: "createdInstances" in x.name, recent))[0]
+    #created_instances_file = path_arg / "createdInstances.csv"
     log.debug(f"Reading {created_instances_file}")
     created_instances = pd.read_csv(created_instances_file)
     created_instances_stats(created_instances, conditions_df, ignored_ids)
-
-
-
-
-    
-
-
-
-
