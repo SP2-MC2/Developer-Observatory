@@ -76,39 +76,17 @@ try{
     $results = $sth->fetch(PDO::FETCH_ASSOC);
     //error_log($results['count']." instances started by ".$remoteIp, 0);
     if($results['count'] < $dailyMaxInstances){
-        // Generate User ID
-        $uniqid = $token;//uniqid('', true);
+        $uniqid = $token;
 
-            /*$rare = array(2,4,6,8,3,5,7,9);
-            $common = array(0,10,13,16,19,22,1,11,14,17,20,23,12,15,18,21,24);
-            $redisRunCounter = "redisRunCounter";
-            $redisRareRunCounter = "redisRareRunCounter";
-            $redisCommonRunCounter = "redisCommonRunCounter";
-
-            $resultsCond = 0;
-
-            $run = $redisConn->incr($redisRunCounter);
-            if(($run % 10) == 0){
-                $rareRun = $redisConn->incr($redisRareRunCounter);
-                $resultsCond = $rare[($rareRun % count($rare))];
-            } else {
-                $commonRun = $redisConn->incr($redisCommonRunCounter);
-                $resultsCond = $common[$commonRun % count($common)];
-            }
-
-            $sth = $connect->prepare('SELECT category FROM conditions WHERE condition = :cond;');
-            $sth->bindParam(':cond', $resultsCond);
-            $sth->execute();
-            $resultsCat = $sth->fetch(PDO::FETCH_ASSOC); */
-
-        $sth = $connect->prepare('SELECT category, categorycount FROM (SELECT c.category as category, COUNT(ci.category) as categorycount FROM conditions c LEFT JOIN "createdInstances" ci ON c.condition = ci.condition GROUP BY c.category ORDER BY c.category) AS c ORDER BY categorycount ASC LIMIT 1;');
-        $sth->execute();
-        $resultsCat = $sth->fetch(PDO::FETCH_ASSOC);
-
-        $sth = $connect->prepare('SELECT cond, condcount FROM (SELECT c.condition as cond, COUNT(ci.condition) as condcount FROM conditions c LEFT JOIN "createdInstances" ci ON c.condition = ci.condition WHERE c.category = :category GROUP BY c.condition ORDER BY RANDOM()) AS f ORDER BY condcount ASC LIMIT 1;');
-        $sth->bindParam(':category', $resultsCat['category']);
+        $sth = $connect->prepare('SELECT cond, condcount FROM (SELECT c.condition as cond, COUNT(ci.condition) as condcount FROM conditions c LEFT JOIN "createdInstances" ci ON c.condition= ci.condition GROUP BY c.condition ORDER BY RANDOM()) AS f ORDER BY condcount ASC LIMIT 1;');
+        //$sth->bindParam(':category', $resultsCat['category']);
         $sth->execute();
         $results = $sth->fetch(PDO::FETCH_ASSOC);
+
+        $sth = $connect->prepare("SELECT category FROM conditions WHERE condition = :condition");
+        $sth->bindParam(":condition", $results["cond"]);
+        $sth->execute();
+        $resultsCat = $sth->fetch(PDO::FETCH_ASSOC);
 
         $sth = $connect->prepare('SELECT userid FROM "createdInstances" ci WHERE userid = :userid;');
         $sth->bindParam(':userid', $token);
