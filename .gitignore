@@ -2,4 +2,5 @@ developer-observatory.conf
 backups/
 exports/
 analysis/ignoreids.txt
+analysis/tmp/
 __pycache__

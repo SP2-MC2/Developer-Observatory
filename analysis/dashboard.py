@@ -9,6 +9,8 @@ Displays various condition and study statistics from a CSV backup
 
 import sys
 import logging
+import os
+from zipfile import ZipFile
 import pandas as pd
 from pathlib import Path
 
@@ -32,7 +34,9 @@ def created_instances_stats(df, c_df, ignored):
     un = df.drop_duplicates("ip")
     completed_unique = un[un["finished"] == "t"].shape[0]
     print("Completed studies (unique ip):", completed_unique)
-    print("Overall dropout rate {:.2%}".format(1 - (completed_unique / ip_addresses)))
+    print("Overall dropout rate: {:.2%}".format(1 - (completed_unique / ip_addresses)))
+    running_instances = un[un["instanceTerminated"] == "f"].shape[0]
+    print("Running instances:", running_instances)
     print()
 
     condition_stats = pd.DataFrame(df[
@@ -89,7 +93,7 @@ def read_ignore():
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        log.error("usage: dashboard.py <csv backup directory> [log level]")
+        log.error("usage: dashboard.py <data.zip> [log level]")
         exit(1)
 
     if len(sys.argv) > 2:
@@ -97,10 +101,17 @@ if __name__ == "__main__":
     else:
         log.setLevel("WARNING")
 
-    path_arg = Path(sys.argv[1])
-    if not path_arg.is_dir():
-        log.error(f"{path_arg.name} is not a directory")
+    zip_path = Path(sys.argv[1])
+    if not zip_path.is_file():
+        log.error(f"{zip_path.name} is not a file")
         sys.exit(1)
+
+    # Extract provided zip into tmp directory
+    path_arg = Path("./tmp")
+    z = ZipFile(zip_path)
+    path_arg.mkdir(exist_ok=True)
+    z.extractall(path_arg)
+    log.debug(f"Extracted all files from {path_arg.name}")
 
     # Find most recent CSVs
     files = sorted(path_arg.glob("*.csv"))
