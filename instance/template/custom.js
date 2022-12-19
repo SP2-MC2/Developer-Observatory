@@ -238,6 +238,17 @@ define([
         $('div#menubar-container').hide();
         // Remove link to notebook tree
         $("div#ipython_notebook a").remove();
+        // Remove run this cell button
+        $(".run_this_cell").remove();
+        // Remove click event on the notebook name
+        $("#notebook_name").off("click");
+        // Remove autosave status
+        $(".autosave_status").remove();
+
+        // Disable keyboard shortcuts
+        Jupyter.keyboard_manager.disable();
+        // Block keyboard manager enable function
+        Jupyter.KeyboardManager.prototype.enable = () => {console.debug("Blocked KeyboardManager enable")};
 
 
         // Setup variables
@@ -378,6 +389,9 @@ define([
                 $(`#cell${i+1}`).addClass(`task${cell.metadata.tasknum}`);
             }
         });
+
+        // After adding everything, tell jupyter to resize
+        Jupyter.page._resize_site();
 
         // Hide and scroll to current task
         hideTasks();
