@@ -78,7 +78,7 @@ try{
     if($results['count'] < $dailyMaxInstances){
         $uniqid = $token;
 
-        $sth = $connect->prepare('SELECT cond, condcount FROM (SELECT c.condition as cond, COUNT(ci.condition) as condcount FROM conditions c LEFT JOIN "createdInstances" ci ON c.condition= ci.condition GROUP BY c.condition ORDER BY RANDOM()) AS f ORDER BY condcount ASC LIMIT 1;');
+        $sth = $connect->prepare('SELECT cond, condcount FROM (SELECT c.condition as cond, COUNT(ci.condition) as condcount FROM conditions c LEFT JOIN "createdInstances" ci ON c.condition= ci.condition WHERE ignored = false GROUP BY c.condition ORDER BY RANDOM()) AS f ORDER BY condcount ASC LIMIT 1;');
         //$sth->bindParam(':category', $resultsCat['category']);
         $sth->execute();
         $results = $sth->fetch(PDO::FETCH_ASSOC);

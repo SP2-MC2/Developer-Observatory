@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS "createdInstances" (
     instanceid text,
     finished boolean DEFAULT false,
     heartbeat timestamp without time zone default now(),
-    "instanceTerminated" boolean DEFAULT false
+    "instanceTerminated" boolean DEFAULT false,
+    ignored boolean DEFAULT false
 );
 
 DROP TABLE IF EXISTS "conditions";
